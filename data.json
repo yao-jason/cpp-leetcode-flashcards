@@ -17,7 +17,7 @@
   "Greedy": {
     "trigger": "Interval Scheduling, Minimum jumps, Maximizing/Minimizing without exhaustive search. (Use ONLY when local optimum guarantees global optimum)",
     "complexity": "Time: O(N log N) usually due to sorting | Space: O(1)",
-    "code": "// There is no universal code for Greedy, but the core pattern is always:\n// 1. Sort the input based on a specific heuristic (e.g., end time for intervals)\n// 2. Iterate and pick the locally optimal choice\n\nsort(intervals.begin(), intervals.end(), [](auto& a, auto& b) {\n    return a[1] < b[1]; // Sort by end time\n});\n\nint count = 0, current_end = INT_MIN;\nfor (auto& interval : intervals) {\n    if (interval[0] >= current_end) {\n        // No overlap, pick this one\n        count++;\n        current_end = interval[1];\n    }\n}"
+    "code": "// There is no universal code for Greedy, but the core pattern is always:\n// 1. Sort the input based on a specific heuristic (e.g., end time for intervals)\n// 2. Iterate and pick the locally optimal choice\n\nsort(intervals.begin(), intervals.end(), [](const vector<int>& a, const vector<int>& b) {\n    return a[1] < b[1]; // Sort by end time\n});\n\nint count = 0, current_end = INT_MIN;\nfor (const vector<int>& interval : intervals) {\n    if (interval[0] >= current_end) {\n        // No overlap, pick this one\n        count++;\n        current_end = interval[1];\n    }\n}"
   },
   "Linked List": {
     "trigger": "Reverse in place, Find middle node, Cycle detection (Floyd's Tortoise and Hare)",
@@ -37,7 +37,7 @@
   "Sweep Line (Intervals)": {
     "trigger": "Overlapping intervals, Meeting Rooms, Maximum concurrent events, Skyline problem",
     "complexity": "Time: O(N log N) | Space: O(N)",
-    "code": "// std::map automatically sorts keys (times) in ascending order\nmap<int, int> events;\nfor (auto& interval : intervals) {\n    // Be careful with [start, end] inclusiveness.\n    // If [1, 2] and [2, 3] overlap, use interval[1] + 1 for the end event\n    events[interval[0]]++;\n    events[interval[1]]--; \n}\n\nint current_active = 0, max_active = 0;\nfor (auto& [time, count] : events) {\n    current_active += count;\n    max_active = max(max_active, current_active);\n}\nreturn max_active;"
+    "code": "// std::map automatically sorts keys (times) in ascending order\nmap<int, int> events;\nfor (const vector<int>& interval : intervals) {\n    // Be careful with [start, end] inclusiveness.\n    // If [1, 2] and [2, 3] overlap, use interval[1] + 1 for the end event\n    events[interval[0]]++;\n    events[interval[1]]--; \n}\n\nint current_active = 0, max_active = 0;\nfor (const auto& [time, count] : events) {\n    current_active += count;\n    max_active = max(max_active, current_active);\n}\nreturn max_active;"
   },
   "Tree: BFS / DFS Traversal": {
     "trigger": "Level order traversal, Lowest Common Ancestor, Tree depth/diameter, Path sum",
@@ -47,7 +47,7 @@
   "Trie (Prefix Tree)": {
     "trigger": "Prefix matching, Autocomplete, Word Search II, Maximum XOR of Two Numbers",
     "complexity": "Time: O(L) per word | Space: O(N * L * 26)",
-    "code": "struct TrieNode {\n    TrieNode* next[26] = {NULL};\n    bool isEnd = false;\n    \n    // Prevent memory leaks in C++ interviews\n    ~TrieNode() {\n        for (auto& node : next) {\n            if (node != NULL) delete node;\n        }\n    }\n};\n\nvoid insert(TrieNode* root, string& word) {\n    TrieNode* node = root;\n    for (char c : word) {\n        if (node->next[c - 'a'] == NULL) {\n            node->next[c - 'a'] = new TrieNode();\n        }\n        node = node->next[c - 'a'];\n    }\n    node->isEnd = true;\n}"
+    "code": "struct TrieNode {\n    TrieNode* next[26] = {NULL};\n    bool isEnd = false;\n    \n    // Prevent memory leaks in C++ interviews\n    ~TrieNode() {\n        for (TrieNode* node : next) {\n            if (node != NULL) delete node;\n        }\n    }\n};\n\nvoid insert(TrieNode* root, string& word) {\n    TrieNode* node = root;\n    for (char c : word) {\n        if (node->next[c - 'a'] == NULL) {\n            node->next[c - 'a'] = new TrieNode();\n        }\n        node = node->next[c - 'a'];\n    }\n    node->isEnd = true;\n}"
   },
   "Backtracking": {
     "trigger": "Permutations, Combinations, Subsets, N-Queens, Exhaustive search with constraints",
@@ -62,7 +62,7 @@
   "Graph: Topological Sort": {
     "trigger": "Task scheduling, Dependency resolution, Cycle detection in directed graphs, Alien Dictionary",
     "complexity": "Time: O(V + E) | Space: O(V + E)",
-    "code": "vector<int> indegree(numCourses, 0);\nfor (auto& edge : prerequisites) {\n    graph[edge[1]].push_back(edge[0]);\n    indegree[edge[0]]++;\n}\n\nqueue<int> q;\nfor (int i = 0; i < numCourses; i++) {\n    if (indegree[i] == 0) q.push(i);\n}\n\nvector<int> order;\nwhile (!q.empty()) {\n    int curr = q.front();\n    q.pop();\n    order.push_back(curr);\n    \n    for (int next_node : graph[curr]) {\n        // Decrement indegree; if it hits 0, it's ready to be processed\n        if (--indegree[next_node] == 0) {\n            q.push(next_node);\n        }\n    }\n}\n// Important: Check for cycles\nreturn order.size() == numCourses ? order : vector<int>();"
+    "code": "vector<int> indegree(numCourses, 0);\nfor (const vector<int>& edge : prerequisites) {\n    graph[edge[1]].push_back(edge[0]);\n    indegree[edge[0]]++;\n}\n\nqueue<int> q;\nfor (int i = 0; i < numCourses; i++) {\n    if (indegree[i] == 0) q.push(i);\n}\n\nvector<int> order;\nwhile (!q.empty()) {\n    int curr = q.front();\n    q.pop();\n    order.push_back(curr);\n    \n    for (int next_node : graph[curr]) {\n        // Decrement indegree; if it hits 0, it's ready to be processed\n        if (--indegree[next_node] == 0) {\n            q.push(next_node);\n        }\n    }\n}\n// Important: Check for cycles\nreturn order.size() == numCourses ? order : vector<int>();"
   },
   "Graph: Union-Find (DSU)": {
     "trigger": "Dynamic connectivity, Cycle detection in undirected graphs, Group/Set union and find",
