@@ -1,232 +1,27 @@
 {
-  "Monotonic Stack": [
-    {
-      "title": "739. Daily Temperatures",
-      "link": "https://leetcode.com/problems/daily-temperatures",
-      "code": "class Solution {\npublic:\n    // time/space: O(n)/O(n)\n    vector<int> dailyTemperatures(vector<int>& temperatures) {\n        int n = temperatures.size();\n        vector<int> stk, answer(n, 0);\n        for (int i = 0; i < n; i++) {\n            while (!stk.empty() && (temperatures[stk.back()] < temperatures[i])) {\n                answer[stk.back()] = (i - stk.back());\n                stk.pop_back();\n            }\n            stk.push_back(i);\n        }\n        return answer;\n    }\n};"
-    }
-  ],
-  "Two Pointers": [
-    {
-      "title": "283. Move Zeroes",
-      "link": "https://leetcode.com/problems/move-zeroes",
-      "code": "class Solution {\npublic:\n    // time/space: O(n)/O(1)\n    void moveZeroes(vector<int>& nums) {\n        int l = 0;\n        for (int r = 0; r < nums.size(); r++) {\n            if (nums[r] != 0) nums[l++] = nums[r];\n        }\n        while (l < nums.size()) nums[l++] = 0;\n    }\n};"
-    },
-    {
-      "title": "16. 3Sum Closest",
-      "link": "https://leetcode.com/problems/3sum-closest",
-      "code": "class Solution {\npublic:\n    // time/space: O(n^2)/O(1)\n    int threeSumClosest(vector<int>& nums, int target) {\n        sort(nums.begin(), nums.end());\n        int n = nums.size(), closest = nums[0] + nums[1] + nums[2];\n        for (int i = 0; i < n; i++) {\n            int l = i + 1, r = n - 1;\n            while (l < r) {\n                int sum = nums[i] + nums[l] + nums[r];\n                if (sum == target) return sum;\n                if (abs(sum - target) < abs(closest - target)) closest = sum;\n                if (sum < target) l++;\n                else r--;\n            }\n        }\n        return closest;\n    }\n};"
-    }
-  ],
-  "Binary Search": [
-    {
-      "title": "875. Koko Eating Bananas",
-      "link": "https://leetcode.com/problems/koko-eating-bananas",
-      "code": "class Solution {\npublic:\n    // time/space: O(nlogK)/O(1)\n    int minEatingSpeed(vector<int>& piles, int h) {\n        int l = 1, r = *max_element(piles.begin(), piles.end());\n        while (l < r) {\n            int k = l + (r - l) / 2;\n            if (getHour(piles, k) <= h) r = k;\n            else l = k + 1;\n        }\n        return l;\n    }\nprivate:\n    int getHour(vector<int>& piles, int k) {\n        int hour = 0;\n        for (auto& p : piles) hour += ((p + k - 1) / k);\n        return hour;\n    }\n};"
-    },
-    {
-      "title": "4. Median of Two Sorted Arrays",
-      "link": "https://leetcode.com/problems/median-of-two-sorted-arrays",
-      "code": "class Solution {\npublic:\n    // time/space: O(log(m + n))/O(log(m + n))\n    double findMedianSortedArrays(vector<int>& nums1, vector<int>& nums2) {\n        int k1 = (nums1.size() + nums2.size() + 1) / 2;\n        int k2 = (nums1.size() + nums2.size() + 2) / 2;\n        return (double)(getKth(nums1, 0, nums2, 0, k1) + getKth(nums1, 0, nums2, 0, k2)) / 2.0;\n    }\nprivate:\n    int getKth(vector<int>& nums1, int l1, vector<int>& nums2, int l2, int k) {\n        // terminate\n        if (l1 >= nums1.size()) return nums2[l2 + k - 1];\n        if (l2 >= nums2.size()) return nums1[l1 + k - 1];\n        if (k == 1) return min(nums1[l1], nums2[l2]);\n\n        // enumerate\n        int m1 = l1 + (k / 2) - 1, m2 = l2 + (k / 2) - 1;\n        int median1 = (m1 < nums1.size()) ? nums1[m1] : INT_MAX;\n        int median2 = (m2 < nums2.size()) ? nums2[m2] : INT_MAX;\n        if (median1 <= median2) return getKth(nums1, m1 + 1, nums2, l2, k - (k / 2));\n        return getKth(nums1, l1, nums2, m2 + 1, k - (k / 2));\n    }\n};"
-    }
-  ],
-  "Sliding Window": [
-    {
-      "title": "76. Minimum Window Substring",
-      "link": "https://leetcode.com/problems/minimum-window-substring",
-      "code": "class Solution {\npublic:\n    // time/space: O(m + n)/O(1)\n    string minWindow(string s, string t) {\n        vector<int> count(128, 0);\n        for (auto& c : t) count[c]++;\n        int bestIndex = 0, bestLength = INT_MAX;\n        for (int l = 0, r = 0; r < s.size(); r++) {\n            count[s[r]]--;\n            while (all_of(count.begin(), count.end(), [](int x){return (x <= 0);})) {\n                if ((r - l + 1) < bestLength) bestIndex = l, bestLength = r - l + 1;\n                count[s[l++]]++;\n            }\n        }\n        if (bestLength == INT_MAX) return \"\";\n        return s.substr(bestIndex, bestLength);\n    }\n};"
-    },
-    {
-      "title": "239. Sliding Window Maximum",
-      "link": "https://leetcode.com/problems/sliding-window-maximum",
-      "code": "class Solution {\npublic:\n    // time/space: O(n)/O(k)\n    vector<int> maxSlidingWindow(vector<int>& nums, int k) {\n        int n = nums.size();\n        deque<int> dq;\n        vector<int> result;\n        for (int i = 0; i < n; i++) {\n            while (!dq.empty() && (dq.front() <= (i - k))) dq.pop_front();\n            while (!dq.empty() && (nums[dq.back()] <= nums[i])) dq.pop_back();\n            dq.push_back(i);\n            if (i >= (k - 1)) result.push_back(nums[dq.front()]);\n        }\n        return result;\n    }\n};"
-    },
-    {
-      "title": "795. Number of Subarrays with Bounded Maximum",
-      "link": "https://leetcode.com/problems/number-of-subarrays-with-bounded-maximum",
-      "code": "class Solution {\npublic:\n    // time/space: O(n)/O(1)\n    int numSubarrayBoundedMax(vector<int>& nums, int left, int right) {\n        return helper(nums, right) - helper(nums, left - 1);\n    }\nprivate:\n    int helper(vector<int>& nums, int bound) {\n        int count = 0;\n        for (int l = 0, r = 0; r < nums.size(); r++) {\n            if (nums[r] <= bound) count += (r - l + 1);\n            else l = r + 1;\n        }\n        return count;\n    }\n};"
-    }
-  ],
-  "Linked List": [
-    {
-      "title": "23. Merge k Sorted Lists",
-      "link": "https://leetcode.com/problems/merge-k-sorted-lists",
-      "code": "class Solution {\npublic:\n    // time/space: O(nlogk)/O(1)\n    ListNode* mergeKLists(vector<ListNode*>& lists) {\n        if (lists.empty()) return NULL;\n        int k = lists.size();\n        for (int interval = 1; interval < k; interval *= 2) {\n            for (int i = 0; (i + interval) < k; i += (interval * 2)) {\n                lists[i] = merge2Lists(lists[i], lists[i + interval]);\n            }\n        }\n        return lists[0];\n    }\nprivate:\n    ListNode* merge2Lists(ListNode* head1, ListNode* head2) {\n        ListNode* dummy = new ListNode();\n        ListNode* prev = dummy;\n        while ((head1 != NULL) || (head2 != NULL)) {\n            int value1 = (head1 == NULL) ? INT_MAX : head1->val;\n            int value2 = (head2 == NULL) ? INT_MAX : head2->val;\n            if (value1 <= value2) prev->next = head1, head1 = head1->next;\n            else prev->next = head2, head2 = head2->next;\n            prev = prev->next;\n        }\n        return dummy->next;\n    }"
-    },
-    {
-      "title": "25. Reverse Nodes in k-Group",
-      "link": "https://leetcode.com/problems/reverse-nodes-in-k-group",
-      "code": "class Solution {\npublic:\n    // time/space: O(n)/O(1)\n    ListNode* reverseKGroup(ListNode* head, int k) {\n        ListNode *dummy = new ListNode(0, head);\n        ListNode *prev = dummy;\n        while (head != NULL) {\n            ListNode* tail = head;\n            for (int i = 1; (i < k) && (tail != NULL); i++) tail = tail->next;\n            if (tail == NULL) break;\n            ListNode* next = tail->next;\n            tail->next = NULL;\n            reverseList(head);\n            prev->next = tail, head->next = next;\n            prev = head, head = next;\n        }\n        return dummy->next;\n    }\nprivate:\n    void reverseList(ListNode* head) {\n        ListNode *prev = NULL, *curr = head;\n        while (curr != NULL) {\n            ListNode* next = curr->next;\n            curr->next = prev;\n            prev = curr;\n            curr = next;\n        }\n    }\n};"
-    },
-    {
-      "title": "287. Find the Duplicate Number",
-      "link": "https://leetcode.com/problems/find-the-duplicate-number",
-      "code": "class Solution {\npublic:\n    // time/space: O(n)/(1)\n    int findDuplicate(vector<int>& nums) {\n        int slow = nums[0];\n        int fast = nums[nums[0]];\n        while (slow != fast) slow = nums[slow], fast = nums[nums[fast]];\n        int num = 0;\n        while (num != fast) num = nums[num], fast = nums[fast];\n        return num;\n    }\n};"
-    }
-  ],
-  "Trees": [
-    {
-      "title": "98. Validate BST",
-      "link": "https://leetcode.com/problems/validate-binary-search-tree/description",
-      "code": "class Solution {\npublic:\n    // time/space: O(n)/O(h)\n    bool isValidBST(TreeNode* root, long long leftBound = LLONG_MIN, long long rightBound = LLONG_MAX) {\n        // terminate\n        if (root == NULL) return true;\n        if (root->val <= leftBound) return false;\n        if (rightBound <= root->val) return false;\n\n        // enumerate\n        return (\n            isValidBST(root->left, leftBound, root->val) &&\n            isValidBST(root->right, root->val, rightBound)\n        );\n    }\n};"
-    },
-    {
-      "title": "105. Construct Binary Tree from Preorder and Inorder Traversal",
-      "link": "https://leetcode.com/problems/construct-binary-tree-from-preorder-and-inorder-traversal/description",
-      "code": "class Solution {\npublic:\n    // time/space: O(n)/O(n)\n    TreeNode* buildTree(vector<int>& preorder, vector<int>& inorder) {\n        n = preorder.size();\n        if (n == 0) return NULL;\n        for (int i = 0; i < n; i++) valueToInorderIndex[inorder[i]] = i;\n        int index = 0;\n        return helper(preorder, index, 0, n - 1);\n    }\nprivate:\n    int n;\n    unordered_map<int, int> valueToInorderIndex;\n    TreeNode* helper(vector<int>& preorder, int& index, int l, int r) {\n        // terminate\n        if (index >= n) return NULL;\n        if (l > r) return NULL;\n\n        // enumerate\n        int value = preorder[index++];\n        TreeNode* node = new TreeNode(value);\n        node->left = helper(preorder, index, l, valueToInorderIndex[value] - 1);\n        node->right = helper(preorder, index, valueToInorderIndex[value] + 1, r);\n        return node;\n    }\n};"
-    }
-  ],
-  "Tries": [
-    {
-      "title": "208. Implement Trie (Prefix Tree)",
-      "link": "https://leetcode.com/problems/implement-trie-prefix-tree",
-      "code": "class Trie {\npublic:\n    ~Trie() {\n        for (auto& node : next) {\n            if (node != NULL) delete(node);\n        }\n    }\n    \n    void insert(string word) {\n        Trie* node = this;\n        for (auto& c : word) {\n            if (node->next[c - 'a'] == NULL) node->next[c - 'a'] = new Trie();\n            node = node->next[c - 'a'];\n        }\n        node->isEnd = true;\n    }\n    \n    bool search(string word, bool isPrefix = false) {\n        Trie* node = this;\n        for (auto& c : word) {\n            if (node->next[c - 'a'] == NULL) return false;\n            node = node->next[c - 'a'];\n        }\n        if (isPrefix) return true;\n        return node->isEnd;\n    }\n    \n    bool startsWith(string prefix) {\n        return search(prefix, true);\n    }\nprivate:\n    Trie* next[26] = {NULL};\n    bool isEnd = false;\n};"
-    }
-  ],
-  "Heap / Priority Queue": [
-    {
-      "title": "973. K Closest Points to Origin",
-      "link": "https://leetcode.com/problems/k-closest-points-to-origin",
-      "code": "class Solution {\npublic:\n    // time/space: O(nlogk)/O(k)\n    vector<vector<int>> kClosest(vector<vector<int>>& points, int k) {\n        priority_queue<tuple<long long, int, int>, vector<tuple<long long, int, int>>, less<>> pq;\n        for (auto& p : points) {\n            pq.push({(1LL * p[0] * p[0]) + (1LL * p[1] * p[1]), p[0], p[1]});\n            if (pq.size() > k) pq.pop();\n        }\n        vector<vector<int>> result;\n        while (!pq.empty()) {\n            auto& [_, x, y] = pq.top();\n            result.push_back({x, y});\n            pq.pop();\n        }\n        return result;\n    }\n};"
-    },
-    {
-      "title": "215. Kth Largest Element in an Array",
-      "link": "https://leetcode.com/problems/kth-largest-element-in-an-array",
-      "code": "class Solution {\npublic:\n    // time/space: O(n)/O(1)\n    int findKthLargest(vector<int>& nums, int k) {\n        int l = 0, r = nums.size() - 1, target = k - 1;\n        while (l <= r) {\n            int p = partition(nums, l, r);\n            if (p == target) return nums[p];\n            if (target < p) r = p - 1;\n            else l = p + 1;\n        }\n        return INT_MAX;\n    }\nprivate:\n    int partition(vector<int>& nums, int l, int r) {\n        swap(nums[l], nums[l + (rand() % (r - l + 1))]);\n        int pivot = nums[l], left = l + 1, right = r;\n        while (left <= right) {\n            if (nums[left] > pivot) left++;\n            else if (nums[right] < pivot) right--;\n            else swap(nums[left++], nums[right--]);\n        }\n        swap(nums[l], nums[right]);\n        return right;\n    }\n};"
-    },
-    {
-      "title": "295. Find Median from Data Stream",
-      "link": "https://leetcode.com/problems/find-median-from-data-stream",
-      "code": "class MedianFinder {\npublic:\n    // time: O(logn)\n    void addNum(int num) {\n        if (minHeap.empty() || (num >= minHeap.top())) minHeap.push(num);\n        else maxHeap.push(num);\n        while (abs((int)(minHeap.size() - maxHeap.size())) >= 2) {\n            if (minHeap.size() > maxHeap.size()) maxHeap.push(minHeap.top()), minHeap.pop();\n            else minHeap.push(maxHeap.top()), maxHeap.pop();\n        }\n    }\n    // time: O(1)\n    double findMedian() {\n        if (minHeap.size() > maxHeap.size()) return (double)(minHeap.top());\n        if (minHeap.size() < maxHeap.size()) return (double)(maxHeap.top());\n        return (((double)(minHeap.top()) + (double)(maxHeap.top())) / 2);\n    }\nprivate:\n    // space: O(n)\n    priority_queue<int, vector<int>, greater<>> minHeap;\n    priority_queue<int, vector<int>, less<>> maxHeap;\n};"
-    }
-  ],
-  "Intervals": [
-    {
-      "title": "57. Insert Interval",
-      "link": "https://leetcode.com/problems/insert-interval",
-      "code": "class Solution {\npublic:\n    // time/space: O(n)/O(n)\n    vector<vector<int>> insert(vector<vector<int>>& intervals, vector<int>& newInterval) {\n        vector<vector<int>> result;\n        int start = newInterval[0], end = newInterval[1];\n        int i = 0, n = intervals.size();\n        while (i < n) {\n            if (intervals[i][1] < start) result.push_back(intervals[i++]);\n            else if (end < intervals[i][0]) break;\n            else {\n                start = min(start, intervals[i][0]);\n                end = max(end, intervals[i][1]);\n                i++;\n            }\n        }\n        result.push_back({start, end});\n        while (i < n) result.push_back(intervals[i++]);\n        return result;\n    }\n};"
-    },
-    {
-      "title": "253. Meeting Rooms II",
-      "link": "https://leetcode.com/problems/meeting-rooms-ii",
-      "code": "class Solution {\npublic:\n    // time/space: O(nlogn)/O(n)\n    int minMeetingRooms(vector<Interval>& intervals) {\n        map<int, int> count;\n        for (auto& interval : intervals) {\n            count[interval.start]++;\n            count[interval.end]--;\n        }\n        int maxSum = 0, sum = 0;\n        for (auto& [_, cnt] : count) {\n            sum += cnt;\n            maxSum = max(maxSum, sum);\n        }\n        return maxSum;\n    }\n};"
-    },
-    {
-      "title": "435. Non-overlapping Intervals",
-      "link": "https://leetcode.com/problems/non-overlapping-intervals",
-      "code": "class Solution {\npublic:\n    // time/space: O(nlogn)/O(sort)\n    int eraseOverlapIntervals(vector<vector<int>>& intervals) {\n        sort(intervals.begin(), intervals.end());\n        int erase = 0, end = intervals[0][1];\n        for (int i = 1; i < intervals.size(); i++) {\n            if (end <= intervals[i][0]) end = intervals[i][1];\n            else erase++, end = min(end, intervals[i][1]);\n        }\n        return erase;\n    }\n};"
-    },
-    {
-      "title": "1851. Minimum Interval to Include Each Query",
-      "link": "https://leetcode.com/problems/minimum-interval-to-include-each-query",
-      "code": "class Solution {\npublic:\n    // time/space: O(nlogn + mlogm)/O(n + m)\n    vector<int> minInterval(vector<vector<int>>& intervals, vector<int>& queries) {\n        sort(intervals.begin(), intervals.end(), [](auto& a, auto& b){\n            return (a[0] < b[0]);\n        });\n        vector<pair<int, int>> queryIndex;\n        for (int j = 0; j < queries.size(); j++) queryIndex.push_back({queries[j], j});\n        sort(queryIndex.begin(), queryIndex.end(), [](auto& a, auto& b){\n            return (a.first < b.first);\n        });\n\n        vector<int> result(queries.size());\n        priority_queue<vector<int>, vector<vector<int>>, greater<>> pq;\n        for (int i = 0, j = 0; j < queries.size(); j++) {\n            auto& [query, index] = queryIndex[j];\n            while ((i < intervals.size()) && (intervals[i][0] <= query)) {\n                pq.push({intervals[i][1] - intervals[i][0] + 1, intervals[i][1]});\n                i++;\n            }\n            while (!pq.empty() && (pq.top()[1] < query)) pq.pop();\n            result[index] = (pq.empty()) ? (-1) : (pq.top()[0]);\n        }\n        return result;\n    }\n};"
-    }
-  ],
-  "Greedy": [
-    {
-      "title": "53. Maximum Subarray",
-      "link": "https://leetcode.com/problems/maximum-subarray",
-      "code": "class Solution {\npublic:\n    // time/space: O(n)/O(1)\n    int maxSubArray(vector<int>& nums) {\n        int sum = 0, maxSum = nums.front();\n        for (auto& num : nums) {\n            sum += num;\n            maxSum = max(maxSum, sum);\n            if (sum < 0) sum = 0;\n        }\n        return maxSum;\n    }\n};"
-    },
-    {
-      "title": "134. Gas Station",
-      "link": "https://leetcode.com/problems/gas-station",
-      "code": "class Solution {\npublic:\n    // time/space: O(n)/O(1)\n    int canCompleteCircuit(vector<int>& gas, vector<int>& cost) {\n        long long totalGas = accumulate(gas.begin(), gas.end(), 0LL);\n        long long totalCost = accumulate(cost.begin(), cost.end(), 0LL);\n        if (totalGas < totalCost) return -1;\n        int remain = 0, result = 0;\n        for (int i = 0; i < gas.size(); i++) {\n            remain += (gas[i] - cost[i]);\n            if (remain < 0) remain = 0, result = i + 1;\n        }\n        return result;\n    }\n};"
-    },
-    {
-      "title": "678. Valid Parenthesis String",
-      "link": "https://leetcode.com/problems/valid-parenthesis-string",
-      "code": "class Solution {\npublic:\n    // time/space: O(n)/O(n)\n    bool checkValidString(string s) {\n        stack<int> left, star;\n        for (int i = 0; i < s.size(); i++) {\n            if (s[i] == '(') left.push(i);\n            else if (s[i] == '*') star.push(i);\n            else {\n                if (!left.empty()) left.pop();\n                else if (!star.empty()) star.pop();\n                else return false;\n            }\n        }\n        while (!left.empty() && !star.empty()) {\n            if (left.top() < star.top()) left.pop(), star.pop();\n            else return false;\n        }\n        return left.empty();\n    }\n};"
-    }
-  ],
-  "Backtracking": [
-    {
-      "title": "40. Combination Sum II",
-      "link": "https://leetcode.com/problems/combination-sum-ii",
-      "code": "class Solution {\npublic:\n    // time/space: O(nlogn + n * 2 ^ n)/O(n * n ^ 2)\n    vector<vector<int>> combinationSum2(vector<int>& candidates, int target) {\n        vector<vector<int>> result;\n        vector<int> hold;\n        sort(candidates.begin(), candidates.end());\n        helper(candidates, result, hold, target, 0);\n        return result;\n    }\nprivate:\n    void helper(vector<int>& candidates, vector<vector<int>>& result, vector<int>& hold, int target, int i) {\n        // terminate\n        if (target == 0) {\n            result.push_back(hold);\n            return;\n        }\n        if (target < 0) return;\n        if (i >= candidates.size()) return;\n\n        // enumerate\n        hold.push_back(candidates[i]);\n        helper(candidates, result, hold, target - candidates[i], i + 1);\n        hold.pop_back();\n        while (((i + 1) < candidates.size()) && (candidates[i] == candidates[i + 1])) i++;\n        helper(candidates, result, hold, target, i + 1);\n    }\n};"
-    },
-    {
-      "title": "46. Permutations",
-      "link": "https://leetcode.com/problems/permutations",
-      "code": "class Solution {\npublic:\n    // time/space: O(n * n!)/O(n * n!)\n    vector<vector<int>> permute(vector<int>& nums) {\n        vector<vector<int>> result;\n        helper(nums, result, 0);\n        return result;\n    }\nprivate:\n    void helper(vector<int>& nums, vector<vector<int>>& result, int i) {\n        // terminate\n        if (i == nums.size()) {\n            result.push_back(nums);\n            return;\n        }\n\n        // enumerate\n        for (int j = i; j < nums.size(); j++) {\n            swap(nums[i], nums[j]);\n            helper(nums, result, i + 1);\n            swap(nums[i], nums[j]);\n        }\n    }\n};"
-    },
-    {
-      "title": "131. Palindrome Partitioning",
-      "link": "https://leetcode.com/problems/palindrome-partitioning",
-      "code": "class Solution {\npublic:\n    // time/space: O(n * 2 ^ n)/O(n * 2 ^ n)\n    vector<vector<string>> partition(string s) {\n        vector<vector<string>> result;\n        vector<string> substrings;\n        helper(s, result, substrings, 0);\n        return result;\n    }\nprivate:\n    void helper(string& s, vector<vector<string>>& result, vector<string>& substrings, int i) {\n        // terminate\n        if (i == s.size()) {\n            result.push_back(substrings);\n            return;\n        }\n\n        // enumerate\n        string substring = \"\";\n        for (int j = i; j < s.size(); j++) {\n            substring.push_back(s[j]);\n            if (isPalindrome(substring)) {\n                substrings.push_back(substring);\n                helper(s, result, substrings, j + 1);\n                substrings.pop_back();\n            }\n        }\n    }\n    bool isPalindrome(string& s) {\n        int l = 0, r = s.size() - 1;\n        while (l < r) {\n            if (s[l] != s[r]) return false;\n            l++, r--;\n        }\n        return true;\n    }\n};"
-    },
-    {
-      "title": "51. N-Queens",
-      "link": "https://leetcode.com/problems/n-queens",
-      "code": "class Solution {\npublic:\n    // time/space: O(n * n * n!)/O(n * n)\n    vector<vector<string>> solveNQueens(int n) {\n        vector<vector<string>> result;\n        vector<string> board(n, string(n, '.'));\n        backtrack(n, result, board, 0);\n        return result;\n    }\nprivate:\n    void backtrack(int n, vector<vector<string>>& result, vector<string>& board, int row) {\n        // terminate\n        if (row == n) {\n            result.push_back(board);\n            return;\n        }\n\n        // enumerate\n        for (int col = 0; col < n; col++) {\n            if (canPlace(board, row, col)) {\n                board[row][col] = 'Q';\n                backtrack(n, result, board, row + 1);\n                board[row][col] = '.';\n            }\n        }\n    }\n    bool canPlace(vector<string>& board, int row, int col) {\n        for (int r = 0; r < row; r++) {\n            if (board[r][col] == 'Q') return false;\n            int dr = row - r;\n            if (((col - dr) >= 0) && (board[r][col - dr] == 'Q')) return false;\n            if (((col + dr) < board[0].size()) && (board[r][col + dr] == 'Q')) return false;\n        }\n        return true;\n    }\n};"
-    }
-  ],
-  "Graphs": [
-    {
-      "title": "127. Word Ladder",
-      "link": "https://leetcode.com/problems/word-ladder",
-      "code": "class Solution {\npublic:\n    // time/space: O(N * L ^ 2)/O(N * L), L = word.length, N = word list size\n    int ladderLength(string beginWord, string endWord, vector<string>& wordList) {\n        if (beginWord == endWord) return 1;\n        unordered_set<string> wordSet(wordList.begin(), wordList.end());\n        if (!wordSet.contains(endWord)) return 0;\n\n        int step = 1;\n        unordered_set<string> beginSet{beginWord}, endSet{endWord}, nextSet;\n        if (wordSet.contains(beginWord)) wordSet.erase(beginWord);\n        if (wordSet.contains(endWord)) wordSet.erase(endWord);\n        while (!beginSet.empty() && !endSet.empty()) {\n            if (beginSet.size() > endSet.size()) swap(beginSet, endSet);\n            nextSet.clear();\n            for (auto& w : beginSet) {\n                string word = w;\n                for (int i = 0; i < word.size(); i++) {\n                    char origin = word[i];\n                    for (char c = 'a'; c <= 'z'; c++) {\n                        if (c == origin) continue;\n                        word[i] = c;\n                        if (endSet.contains(word)) return step + 1;\n                        if (!wordSet.contains(word)) continue;\n                        nextSet.insert(word);\n                        wordSet.erase(word);\n                    }\n                    word[i] = origin;\n                }\n            }\n            swap(beginSet, nextSet);\n            step++;\n        }\n        return 0;\n    }\n};"
-    },
-    {
-      "title": "210. Course Schedule II",
-      "link": "https://leetcode.com/problems/course-schedule-ii",
-      "code": "class Solution {\npublic:\n    // time/space: O(V + E)/O(V + E)\n    vector<int> findOrder(int numCourses, vector<vector<int>>& prerequisites) {\n        vector<vector<int>> graph(numCourses);\n        vector<int> indegree(numCourses);\n        for (auto& p : prerequisites) {\n            graph[p[1]].push_back(p[0]);\n            indegree[p[0]]++;\n        }\n\n        vector<int> order;\n        queue<int> q;\n        for (int i = 0; i < numCourses; i++) {\n            if (indegree[i] == 0) {\n                order.push_back(i);\n                q.push(i);\n            }\n        }\n\n        while (!q.empty()) {\n            auto curr = q.front();\n            q.pop();\n            for (auto& next : graph[curr]) {\n                indegree[next]--;\n                if (indegree[next] == 0) {\n                    order.push_back(next);\n                    q.push(next);\n                }\n            }\n        }\n\n        if (order.size() == numCourses) return order;\n        return {};\n    }\n};"
-    },
-    {
-      "title": "684. Redundant Connection",
-      "link": "https://leetcode.com/problems/redundant-connection",
-      "code": "class Solution {\npublic:\n    // time: O(E * α(V)) ~= O(E) (amortized, where α is inverse-Ackermann)\n    // space: O(V)\n    vector<int> findRedundantConnection(vector<vector<int>>& edges) {\n        unordered_map<int, int> parent, sz;\n        for (auto& edge : edges) {\n            if (!connect(parent, sz, edge[0], edge[1])) return edge;\n        }\n        return {};\n    }\nprivate:\n    int find(unordered_map<int, int>& parent, unordered_map<int, int>& sz, int x) {\n        if (!parent.contains(x)) {\n            parent[x] = x;\n            sz[x] = 1;\n            return x;\n        }\n        while (parent[x] != x) {\n            parent[x] = parent[parent[x]];\n            x = parent[x];\n        }\n        return x;\n    }\n    bool connect(unordered_map<int, int>& parent, unordered_map<int, int>& sz, int x, int y) {\n        int rootX = find(parent, sz, x);\n        int rootY = find(parent, sz, y);\n        if (rootX == rootY) return false;\n        if (sz[rootX] >= sz[rootY]) parent[rootY] = rootX, sz[rootX] += sz[rootY];\n        else parent[rootX] = rootY, sz[rootY] += sz[rootX];\n        return true;\n    }\n};"
-    },
-    {
-      "title": "332. Reconstruct Itinerary",
-      "link": "https://leetcode.com/problems/reconstruct-itinerary",
-      "code": "class Solution {\npublic:\n    // time/space: O(ElogE)/O(E + V)\n    vector<string> findItinerary(vector<vector<string>>& tickets) {\n        unordered_map<string, multiset<string>> graph;\n        for (auto& ticket : tickets) graph[ticket[0]].insert(ticket[1]);\n        vector<string> path;\n        dfs(\"JFK\", graph, path);\n        reverse(path.begin(), path.end());\n        return path;\n    }\nprivate:\n    void dfs(string from, unordered_map<string, multiset<string>>& graph, vector<string>& path) {\n        while (!graph[from].empty()) {\n            auto it = graph[from].begin();\n            string to = *it;\n            graph[from].erase(it);\n            dfs(to, graph, path);\n        }\n        path.push_back(from);\n    }\n};"
-    },
-    {
-      "title": "743. Network Delay Time",
-      "link": "https://leetcode.com/problems/network-delay-time",
-      "code": "class Solution {\npublic:\n    // time/space: O((E + V) * logV)/O(V + E)\n    int networkDelayTime(vector<vector<int>>& times, int n, int k) {\n        vector<vector<pair<int, int>>> graph(n + 1);\n        for (auto& time : times) graph[time[0]].push_back({time[1], time[2]});\n\n        vector<int> dist(n + 1, INT_MAX);\n        priority_queue<pair<int, int>, vector<pair<int, int>>, greater<>> pq;\n        dist[k] = 0;\n        pq.push({0, k});\n        while (!pq.empty()) {\n            auto [currTime, currNode] = pq.top();\n            pq.pop();\n            for (auto& [nextNode, time] : graph[currNode]) {\n                int nextTime = currTime + time;\n                if (nextTime < dist[nextNode]) {\n                    dist[nextNode] = nextTime;\n                    pq.push({nextTime, nextNode});\n                }\n            }\n        }\n\n        int maxTime = 0;\n        for (int i = 1; i <= n; i++) {\n            if (dist[i] == INT_MAX) return -1;\n            maxTime = max(maxTime, dist[i]);\n        }\n        return maxTime;\n    }\n};"
-    },
-    {
-      "title": "787. Cheapest Flights Within K Stops",
-      "link": "https://leetcode.com/problems/cheapest-flights-within-k-stops",
-      "code": "class Solution {\npublic:\n    // time/space: O(Ek)/O(E + V)\n    int findCheapestPrice(int n, vector<vector<int>>& flights, int src, int dst, int k) {\n        vector<vector<pair<int, int>>> graph(n);\n        for (auto& flight : flights) graph[flight[0]].push_back({flight[1], flight[2]});\n\n        vector<int> bestPrice(n, INT_MAX);\n        queue<pair<int, int>> q;\n        bestPrice[src] = 0;\n        q.push({src, 0});\n        int step = 0;\n        while (!q.empty() && (step <= k)) {\n            int size = q.size();\n            for (int i = 0; i < size; i++) {\n                auto [currCity, currPrice] = q.front();\n                q.pop();\n                for (auto& [nextCity, price] : graph[currCity]) {\n                    int nextPrice = currPrice + price;\n                    if (nextPrice >= bestPrice[nextCity]) continue;\n                    bestPrice[nextCity] = nextPrice;\n                    q.push({nextCity, nextPrice});\n                }\n            }\n            step++;\n        }\n        return (bestPrice[dst] == INT_MAX) ? -1 : bestPrice[dst];\n    }\n};"
-    }
-  ],
-  "Dynamic Programming": [
-    {
-      "title": "152. Maximum Product Subarray",
-      "link": "https://leetcode.com/problems/maximum-product-subarray",
-      "code": "class Solution {\npublic:\n    // time/space: O(n)/O(1)\n    int maxProduct(vector<int>& nums) {\n        int result = nums.front(), seenMax = nums.front(), seenMin = nums.front();\n        for (int i = 1; i < nums.size(); i++) {\n            if (nums[i] < 0) swap(seenMax, seenMin);\n            seenMax = max(nums[i], seenMax * nums[i]);\n            seenMin = min(nums[i], seenMin * nums[i]);\n            result = max(result, seenMax);\n        }\n        return result;\n    }\n};"
-    },
-    {
-      "title": "213. House Robber II",
-      "link": "https://leetcode.com/problems/house-robber-ii",
-      "code": "class Solution {\npublic:\n    // time/space: O(n)/O(1)\n    int rob(vector<int>& nums) {\n        int n = nums.size();\n        return max(nums[0] + helper(nums, 2, n - 2), helper(nums, 1, n - 1));\n    }\nprivate:\n    int helper(vector<int>& nums, int start, int end) {\n        if (start >= nums.size()) return 0;\n        if (end < start) return 0;\n        int dp0 = 0, dp1 = 0;\n        for (int i = start; i <= end; i++) {\n            int dp2 = max(dp0 + nums[i], dp1);\n            dp0 = dp1, dp1 = dp2;\n        }\n        return dp1;\n    }\n};"
-    },
-    {
-      "title": "309. Best Time to Buy and Sell Stock with Cooldown",
-      "link": "https://leetcode.com/problems/best-time-to-buy-and-sell-stock-with-cooldown/",
-      "code": "class Solution {\npublic:\n    // time/space: O(n)/O(n)\n    int maxProfit(vector<int>& prices) {\n        int n = prices.size();\n        vector<vector<int>> dp(2, vector<int>(n, -1));\n        return helper(prices, dp, 0, 0);\n    }\nprivate:\n    int helper(vector<int>& prices, vector<vector<int>>& dp, int isHold, int day) {\n        // terminate\n        if (day >= prices.size()) return 0;\n        if (dp[isHold][day] != -1) return dp[isHold][day];\n\n        // enumerate\n        if (isHold == 0) {\n            int buy = -prices[day] + helper(prices, dp, 1, day + 1);\n            int not_buy = helper(prices, dp, 0, day + 1);\n            return dp[isHold][day] = max(buy, not_buy);\n        }\n        int sell = prices[day] + helper(prices, dp, 0, day + 2);\n        int not_sell = helper(prices, dp, 1, day + 1);\n        return dp[isHold][day] = max(sell, not_sell);\n    }\n};"
-    }
-  ],
-  "Bit Manipulation": [
-    {
-      "title": "338. Counting Bits",
-      "link": "https://leetcode.com/problems/counting-bits",
-      "code": "class Solution {\npublic:\n    // time/space: O(n)/O(n)\n    vector<int> countBits(int n) {\n        vector<int> dp(n + 1);\n        dp[0] = 0;\n        for (int i = 1; i <= n; i++) dp[i] = dp[i >> 1] + (i & 1);\n        return dp;\n    }\n};"
-    },
-    {
-      "title": "7. Reverse Integer",
-      "link": "https://leetcode.com/problems/reverse-integer",
-      "code": "class Solution {\npublic:\n    // time/space: O(logn)/O(1)\n    int reverse(int x) {\n        int result = 0;\n        while (x != 0) {\n            int digit = x % 10;\n            if (result > MAX_DIV_10) return 0;\n            if ((result == MAX_DIV_10) && (digit > MAX_MOD_10)) return 0;\n            if (result < MIN_DIV_10) return 0;\n            if ((result == MIN_DIV_10) && (digit < MIN_MOD_10)) return 0;\n            result = 10 * result + digit;\n            x /= 10;\n        }\n        return result;\n    }\nprivate:\n    const int MAX_DIV_10 = INT_MAX / 10;\n    const int MAX_MOD_10 = INT_MAX % 10;\n    const int MIN_DIV_10 = INT_MIN / 10;\n    const int MIN_MOD_10 = INT_MIN % 10;\n};"
-    }
-  ],
-  "Segment Tree": [
-    {
-      "title": "3479. Fruits Into Baskets III",
-      "link": "https://leetcode.com/problems/fruits-into-baskets-iii",
-      "code": "class Solution {\npublic:\n    // time/space: O(nlogn)/O(n)\n    int numOfUnplacedFruits(vector<int>& fruits, vector<int>& baskets) {\n        int n = fruits.size();\n        vector<int> tree(4 * n, INVALID);\n        for (int i = 0; i < n; i++) updateTree(tree, 1, 0, n - 1, i, baskets[i]);\n\n        int unplaced = 0;\n        for (auto& fruit : fruits) {\n            int index = findBasket(tree, 1, 0, n - 1, fruit);\n            if (index == INVALID) unplaced++;\n            else updateTree(tree, 1, 0, n - 1, index, INVALID);\n        }\n        return unplaced;\n    }\nprivate:\n    const int INVALID = -1;\n    void updateTree(vector<int>& tree, int node, int start, int end, int index, int value) {\n        // terminate\n        if (start == end) {\n            tree[node] = value;\n            return;\n        }\n\n        // enumerate\n        int mid = start + (end - start) / 2;\n        if (index <= mid) updateTree(tree, 2 * node, start, mid, index, value);\n        else updateTree(tree, 2 * node + 1, mid + 1, end, index, value);\n        tree[node] = max(tree[2 * node], tree[2 * node + 1]);\n    }\n    int findBasket(vector<int>& tree, int node, int start, int end, int value) {\n        // terminate\n        if (tree[node] < value) return INVALID;\n        if (start == end) return start;\n\n        // enumerate\n        int mid = start + (end - start) / 2;\n        if (tree[2 * node] >= value) return findBasket(tree, 2 * node, start, mid, value);\n        return findBasket(tree, 2 * node + 1, mid + 1, end, value);\n    }\n};"
-    }
-  ]
+  "Monotonic Stack": {
+    "trigger": "尋找下一個更大/更小元素 (Next Greater/Smaller Element)、直方圖最大矩形、接雨水問題",
+    "complexity": "Time: O(N) | Space: O(N)",
+    "code": "stack<int> st;\nfor (int i = 0; i < n; i++) {\n    // [GOTCHA] 1. 決定是嚴格大於還是包含等於\n    // [GOTCHA] 2. 建議存 index 而非 value 以便計算距離或處理視窗\n    while (!st.empty() && nums[st.top()] < nums[i]) {\n        int prev_idx = st.top();\n        st.pop();\n        // 處理找到 Next Greater Element 的邏輯\n    }\n    st.push(i);\n}"
+  },
+  "Binary Search (Answer)": {
+    "trigger": "最大化最小值、最小化最大值、在具有單調性的答案空間中搜尋極值",
+    "complexity": "Time: O(N log R) | Space: O(1)",
+    "code": "int l = min_val, r = max_val;\nwhile (l < r) {\n    // [GOTCHA] 若更新邏輯是 l = mid，則計算 mid 需進位：l + (r - l + 1) / 2\n    int mid = l + (r - l) / 2;\n    if (check(mid)) {\n        r = mid; // 尋找最小滿足條件者\n    } else {\n        l = mid + 1;\n    }\n}\nreturn l;"
+  },
+  "Union-Find (DSU)": {
+    "trigger": "動態連通性、無向圖找環、分組/集合合併與查詢",
+    "complexity": "Time: O(α(N)) | Space: O(N)",
+    "code": "struct DSU {\n    vector<int> p;\n    DSU(int n) {\n        p.resize(n);\n        iota(p.begin(), p.end(), 0); // [GOTCHA] 記得初始化為 0 ~ n-1\n    }\n    int find(int i) {\n        // [GOTCHA] 必須實作路徑壓縮 (Path Compression)\n        return p[i] == i ? i : (p[i] = find(p[i]));\n    }\n    void unite(int i, int j) {\n        int root_i = find(i), root_j = find(j);\n        if (root_i != root_j) p[root_i] = root_j;\n    }\n};"
+  },
+  "Digit DP": {
+    "trigger": "計算區間 [L, R] 內滿足特定數位規則的數字數量 (如：不含 4 的數字)",
+    "complexity": "Time: O(digits * states * 10)",
+    "code": "long long memo[20][2][2][state];\nlong long dfs(int pos, bool limit, bool lead, int s, string& num) {\n    if (pos == num.size()) return 1;\n    if (memo[pos][limit][lead][s] != -1) return memo[pos][limit][lead][s];\n\n    int up = limit ? num[pos] - '0' : 9;\n    long long res = 0;\n    for (int i = 0; i <= up; i++) {\n        // [GOTCHA] 1. 注意 limit 的傳遞邏輯\n        // [GOTCHA] 2. lead zero (前導零) 可能影響計數狀態，依題意判斷\n        res += dfs(pos + 1, limit && (i == up), lead && (i == 0), next_s, num);\n    }\n    return memo[pos][limit][lead][s] = res;\n}"
+  },
+  "Segment Tree": {
+    "trigger": "動態區間修改 (Point/Range Update) 與區間查詢 (Sum/Max/Min)",
+    "complexity": "Time: O(log N) per operation",
+    "code": "// [GOTCHA] 陣列空間建議開 4 * N\nvoid build(int node, int start, int end) {\n    if (start == end) {\n        tree[node] = arr[start];\n        return;\n    }\n    int mid = start + (end - start) / 2;\n    build(2 * node, start, mid);\n    build(2 * node + 1, mid + 1, end);\n    tree[node] = max(tree[2 * node], tree[2 * node + 1]);\n}"
+  }
 }

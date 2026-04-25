@@ -1,57 +1,55 @@
 fetch('data.json')
   .then(res => res.json())
   .then(data => {
-    const body = document.body;
-    const sidebar = document.getElementById('sidebar');
-    const toggle = document.getElementById('sidebar-toggle');
     const patternTabs = document.getElementById('pattern-tabs');
     const grid = document.getElementById('card-grid');
 
-    toggle.onclick = () => {
-      body.classList.toggle('sidebar-closed');
-    };
-
     const clear = el => { while (el.firstChild) el.removeChild(el.firstChild); };
 
-    Object.keys(data).forEach((pattern, idx) => {
+    // 初始化側邊欄選單
+    Object.keys(data).forEach((topic, idx) => {
       const btn = document.createElement('button');
-      btn.textContent = pattern;
+      btn.textContent = topic;
       if (idx === 0) btn.classList.add('active');
       btn.onclick = () => {
-        document.querySelectorAll('#pattern-tabs button')
-          .forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('#pattern-tabs button').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        renderCards(data[pattern]);
+        renderFlashcard(topic, data[topic]);
       };
       patternTabs.appendChild(btn);
     });
 
-    function renderCards(problems) {
+    function renderFlashcard(title, topicData) {
       clear(grid);
-      problems.forEach(p => {
-        const card = document.createElement('div');
-        card.className = 'card';
+      
+      const card = document.createElement('div');
+      card.className = 'flashcard';
 
-        const h2 = document.createElement('h2');
-        const a = document.createElement('a');
-        a.href = p.link;
-        a.target = '_blank';
-        a.textContent = p.title;
-        h2.appendChild(a);
-        card.appendChild(h2);
+      card.innerHTML = `
+        <div class="card-header">
+          <h1>${title}</h1>
+        </div>
+        <div class="meta-panel">
+          <div class="meta-row">
+            <span class="meta-label">🎯 Triggers</span>
+            <span class="meta-content">${topicData.trigger}</span>
+          </div>
+          <div class="meta-row">
+            <span class="meta-label">⏱️ Complexity</span>
+            <span class="meta-content">${topicData.complexity}</span>
+          </div>
+        </div>
+        <pre><code class="language-cpp">${topicData.code}</code></pre>
+      `;
 
-        const pre = document.createElement('pre');
-        const code = document.createElement('code');
-        code.className = 'language-cpp';
-        code.textContent = p.code;
-        pre.appendChild(code);
-        card.appendChild(pre);
-
-        grid.appendChild(card);
-      });
-      hljs.highlightAll();
+      grid.appendChild(card);
+      
+      // 執行語法高亮
+      const codeBlock = card.querySelector('code');
+      hljs.highlightElement(codeBlock);
     }
 
-    renderCards(data[Object.keys(data)[0]]);
-  })
-  .catch(err => console.error('載入 data.json 失敗', err));
+    // 預設渲染第一個主題
+    const firstTopic = Object.keys(data)[0];
+    if (firstTopic) renderFlashcard(firstTopic, data[firstTopic]);
+  });

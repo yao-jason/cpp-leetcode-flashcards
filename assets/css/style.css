@@ -1,19 +1,12 @@
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 body {
   margin: 0;
   display: grid;
-  grid-template-columns: 220px 1fr;
+  grid-template-columns: 260px 1fr;
   height: 100vh;
-  font-family: system-ui, sans-serif;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
   background: #0d1117;
   color: #c9d1d9;
-  transition: grid-template-columns 0.3s ease;
-}
-
-body.sidebar-closed {
-  grid-template-columns: 40px 1fr;
 }
 
 #sidebar {
@@ -21,120 +14,97 @@ body.sidebar-closed {
   border-right: 1px solid #30363d;
   display: flex;
   flex-direction: column;
-  position: relative;
-}
-
-#sidebar-toggle {
-  background: none;
-  border: none;
-  color: #c9d1d9;
-  font-size: 1.2rem;
-  padding: 0.5rem;
-  cursor: pointer;
-  width: 100%;
-  box-sizing: border-box;
-  text-align: left;
-}
-body:not(.sidebar-closed) #sidebar-toggle {
-  text-align: right;
-}
-
-#pattern-tabs {
-  flex: 1;
   overflow-y: auto;
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 0.25rem;
-  padding: 0.5rem;
 }
-body.sidebar-closed #pattern-tabs {
-  display: none;
+
+.sidebar-header {
+  padding: 1.5rem;
+  font-weight: bold;
+  font-size: 1rem;
+  line-height: 1.4;
+  color: #3b82f6;
+  border-bottom: 1px solid #30363d;
+}
+
+.sidebar-header span {
+  color: #8b949e;
+  font-size: 0.8rem;
+  font-weight: normal;
 }
 
 #pattern-tabs {
+  padding: 1rem;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  padding: 0.5rem;
+  gap: 0.4rem;
 }
+
 #pattern-tabs button {
-  white-space: nowrap;
-  background: #21262d;
-  color: #c9d1d9;
+  background: transparent;
+  color: #8b949e;
   border: none;
-  border-radius: 8px;
-  padding: 0.15rem 0.6rem;
-  height: 2rem;
-  line-height: 2rem;
-  font-size: 0.85rem;
+  border-radius: 6px;
+  padding: 0.7rem 1rem;
   text-align: left;
   cursor: pointer;
-  transition: background 0.2s, transform 0.2s;
+  font-size: 0.9rem;
+  transition: all 0.2s;
 }
-#pattern-tabs button:hover {
-  background: #2d333b;
-}
+
+#pattern-tabs button:hover { background: #21262d; color: #c9d1d9; }
 #pattern-tabs button.active {
   background: #3b82f6;
-  color: #fff;
+  color: #ffffff;
+  font-weight: 600;
 }
 
-#main-content {
-  overflow-y: auto;
-  padding: 1rem;
-}
+#main-content { padding: 2rem; overflow-y: auto; }
 
-.grid-container {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 1rem;
-  justify-content: start;
-}
-
-@media (max-width: 768px) {
-  body.sidebar-closed {
-    grid-template-columns: 40px 1fr;
-  }
-  .grid-container {
-    grid-template-columns: 1fr;
-  }
-}
-
-.card {
+.flashcard {
   background: #161b22;
   border: 1px solid #30363d;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.card-header h1 { 
+  margin-top: 0; 
+  color: #3b82f6; 
+  font-size: 1.8rem; 
+  margin-bottom: 1.5rem;
+}
+
+.meta-panel {
+  background: #0d1117;
+  border: 1px solid #30363d;
+  border-left: 4px solid #3b82f6;
   border-radius: 8px;
-  padding: 1rem;
+  padding: 1.2rem 1.5rem;
+  margin-bottom: 1.5rem;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  transition: box-shadow 0.2s, transform 0.2s;
+  gap: 0.8rem;
 }
-.card:hover {
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-  transform: translateY(-2px);
-}
-.card h2 {
-  margin: 0;
-  font-size: 1.1rem;
-}
-.card h2 a {
-  color: #58a6ff;
-  text-decoration: none;
-}
-.card h2 a:hover {
-  text-decoration: underline;
-}
-.card pre {
-  background: #0d1117;
-  padding: 0.75rem;
-  border-radius: 4px;
-  overflow-x: auto;
-}
-.card code {
-  font-family: "Source Code Pro", monospace;
-  font-size: 0.9rem;
+
+.meta-row { display: flex; align-items: baseline; }
+.meta-label {
+  font-weight: 600;
   color: #c9d1d9;
-  white-space: pre;
-  line-height: 1.4;
+  min-width: 140px;
+  flex-shrink: 0;
+}
+.meta-content { color: #8b949e; line-height: 1.5; font-size: 0.95rem; }
+
+pre {
+  background: #0d1117 !important;
+  border-radius: 8px;
+  padding: 1.5rem;
+  border: 1px solid #21262d;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin: 0;
+  overflow-x: auto;
 }
