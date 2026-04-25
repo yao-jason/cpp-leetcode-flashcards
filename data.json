@@ -1,27 +1,92 @@
 {
+  "Two Pointers": {
+    "trigger": "Pairs summing to target in sorted array (3Sum), Container With Most Water, Palindrome check",
+    "complexity": "Time: O(N) | Space: O(1)",
+    "code": "int l = 0, r = nums.size() - 1;\nwhile (l < r) {\n    int sum = nums[l] + nums[r];\n    if (sum == target) {\n        return {l, r};\n    } else if (sum < target) {\n        l++;\n    } else {\n        r--;\n    }\n}"
+  },
+  "Sliding Window": {
+    "trigger": "Longest/Shortest Subarray or Substring matching a condition, At most K distinct elements",
+    "complexity": "Time: O(N) | Space: O(1) or O(K)",
+    "code": "int l = 0, best = 0;\nfor (int r = 0; r < n; r++) {\n    // 1. Add nums[r] to the current window state\n    state.add(nums[r]);\n    \n    // 2. Shrink the window from the left until it becomes valid again\n    while (invalid(state)) {\n        state.remove(nums[l]);\n        l++;\n    }\n    \n    // 3. Update the global optimum when the window is valid\n    best = max(best, r - l + 1);\n}"
+  },
+  "Binary Search": {
+    "trigger": "Maximize minimum, minimize maximum, searching in a monotonic answer space (Leftmost / Rightmost)",
+    "complexity": "Time: O(N log(Max - Min)) | Space: O(1)",
+    "code": "int l = min_val, r = max_val;\nwhile (l < r) {\n    // Seeking leftmost boundary (Minimum valid value)\n    // Use standard mid: does NOT need rounding up\n    int mid = l + (r - l) / 2;\n    if (isValid(mid)) {\n        r = mid;\n    } else {\n        l = mid + 1;\n    }\n\n    /*\n    // Seeking rightmost boundary (Maximum valid value)\n    // Update logic is l = mid, so mid MUST be rounded up to prevent infinite loop\n    int mid = l + (r - l + 1) / 2;\n    if (isValid(mid)) {\n        l = mid;\n    } else {\n        r = mid - 1;\n    }\n    */\n}\nreturn l; // l == r at the end"
+  },
+  "Greedy": {
+    "trigger": "Interval Scheduling, Minimum jumps, Maximizing/Minimizing without exhaustive search. (Use ONLY when local optimum guarantees global optimum)",
+    "complexity": "Time: O(N log N) usually due to sorting | Space: O(1)",
+    "code": "// There is no universal code for Greedy, but the core pattern is always:\n// 1. Sort the input based on a specific heuristic (e.g., end time for intervals)\n// 2. Iterate and pick the locally optimal choice\n\nsort(intervals.begin(), intervals.end(), [](auto& a, auto& b) {\n    return a[1] < b[1]; // Sort by end time\n});\n\nint count = 0, current_end = INT_MIN;\nfor (auto& interval : intervals) {\n    if (interval[0] >= current_end) {\n        // No overlap, pick this one\n        count++;\n        current_end = interval[1];\n    }\n}"
+  },
+  "Linked List": {
+    "trigger": "Reverse in place, Find middle node, Cycle detection (Floyd's Tortoise and Hare)",
+    "complexity": "Time: O(N) | Space: O(1)",
+    "code": "// --- Reverse Linked List ---\nListNode* prev = nullptr;\nListNode* curr = head;\nwhile (curr != nullptr) {\n    ListNode* next_temp = curr->next;\n    curr->next = prev;\n    prev = curr;\n    curr = next_temp;\n}\n// Return 'prev' as the new head\n\n// --- Fast & Slow Pointers ---\nListNode *slow = head, *fast = head;\nwhile (fast != nullptr && fast->next != nullptr) {\n    slow = slow->next;\n    fast = fast->next->next;\n    if (slow == fast) {\n        // Cycle detected\n        break;\n    }\n}"
+  },
   "Monotonic Stack": {
     "trigger": "Find Next Greater/Smaller Element, Largest Rectangle in Histogram, Trapping Rain Water",
     "complexity": "Time: O(N) | Space: O(N)",
-    "code": "stack<int> st;\nfor (int i = 0; i < n; i++) {\n    // [GOTCHA] 1. Decide if strictly greater or inclusive equal\n    // [GOTCHA] 2. Prefer storing indices over values for distance/window calculations\n    while (!st.empty() && nums[st.top()] < nums[i]) {\n        int prev_idx = st.top();\n        st.pop();\n        // Handle Next Greater Element logic here\n    }\n    st.push(i);\n}"
+    "code": "stack<int> st;\nfor (int i = 0; i < n; i++) {\n    // Decide if strictly greater or inclusive equal based on the problem\n    // Prefer storing indices over values to easily calculate distances\n    while (!st.empty() && nums[st.top()] < nums[i]) {\n        int prev_idx = st.top();\n        st.pop();\n        // Handle the popped element logic here\n    }\n    st.push(i);\n}"
   },
-  "Binary Search (Answer)": {
-    "trigger": "Maximize minimum, minimize maximum, searching in a monotonic answer space",
-    "complexity": "Time: O(N log R) | Space: O(1)",
-    "code": "int l = min_val, r = max_val;\nwhile (l < r) {\n    // [GOTCHA] If update logic is l = mid, mid needs rounding up: l + (r - l + 1) / 2\n    int mid = l + (r - l) / 2;\n    if (check(mid)) {\n        r = mid; // Seek minimum value that satisfies condition\n    } else {\n        l = mid + 1;\n    }\n}\nreturn l;"
+  "Priority Queue (Heap)": {
+    "trigger": "Top K elements, Kth largest/smallest, Median from data stream, Merge K sorted lists",
+    "complexity": "Time: O(N log K) | Space: O(K)",
+    "code": "// 1. Min-Heap Declaration\npriority_queue<int, vector<int>, greater<>> minHeap;\n\n// 2. Custom Comparator (Struct method)\nstruct Compare {\n    bool operator()(const vector<int>& a, const vector<int>& b) {\n        // Return true if 'a' has LOWER priority than 'b' (will be placed below 'b')\n        return a[0] > b[0]; \n    }\n};\npriority_queue<vector<int>, vector<vector<int>>, Compare> pq;\n\n// 3. Top K Pattern Maintenance\nfor (int num : nums) {\n    pq.push(num);\n    if (pq.size() > k) {\n        pq.pop();\n    }\n}"
   },
-  "Union-Find (DSU)": {
-    "trigger": "Dynamic connectivity, cycle detection in undirected graphs, group/set union and find",
-    "complexity": "Time: O(α(N)) | Space: O(N)",
-    "code": "struct DSU {\n    vector<int> p;\n    DSU(int n) {\n        p.resize(n);\n        iota(p.begin(), p.end(), 0); // [GOTCHA] Initialize with 0 ~ n-1\n    }\n    int find(int i) {\n        // [GOTCHA] Path Compression is mandatory for O(α(N))\n        return p[i] == i ? i : (p[i] = find(p[i]));\n    }\n    void unite(int i, int j) {\n        int root_i = find(i), root_j = find(j);\n        if (root_i != root_j) p[root_i] = root_j;\n    }\n};"
+  "Sweep Line (Intervals)": {
+    "trigger": "Overlapping intervals, Meeting Rooms, Maximum concurrent events, Skyline problem",
+    "complexity": "Time: O(N log N) | Space: O(N)",
+    "code": "// std::map automatically sorts keys (times) in ascending order\nmap<int, int> events;\nfor (auto& interval : intervals) {\n    // Be careful with [start, end] inclusiveness.\n    // If [1, 2] and [2, 3] overlap, use interval[1] + 1 for the end event\n    events[interval[0]]++;\n    events[interval[1]]--; \n}\n\nint current_active = 0, max_active = 0;\nfor (auto& [time, count] : events) {\n    current_active += count;\n    max_active = max(max_active, current_active);\n}\nreturn max_active;"
+  },
+  "Tree: BFS / DFS Traversal": {
+    "trigger": "Level order traversal, Lowest Common Ancestor, Tree depth/diameter, Path sum",
+    "complexity": "Time: O(N) | Space: O(H) for DFS, O(N) for BFS",
+    "code": "// --- DFS (Bottom-Up State Passing) ---\nint dfs(TreeNode* root) {\n    if (!root) return 0;\n    int left = dfs(root->left);\n    int right = dfs(root->right);\n    // Process state\n    return max(left, right) + 1;\n}\n\n// --- BFS (Level Order) ---\nqueue<TreeNode*> q;\nq.push(root);\nwhile (!q.empty()) {\n    int size = q.size();\n    for (int i = 0; i < size; i++) {\n        TreeNode* node = q.front();\n        q.pop();\n        if (node->left) q.push(node->left);\n        if (node->right) q.push(node->right);\n    }\n}"
+  },
+  "Trie (Prefix Tree)": {
+    "trigger": "Prefix matching, Autocomplete, Word Search II, Maximum XOR of Two Numbers",
+    "complexity": "Time: O(L) per word | Space: O(N * L * 26)",
+    "code": "struct TrieNode {\n    TrieNode* next[26] = {NULL};\n    bool isEnd = false;\n    \n    // Prevent memory leaks in C++ interviews\n    ~TrieNode() {\n        for (auto& node : next) {\n            if (node != NULL) delete node;\n        }\n    }\n};\n\nvoid insert(TrieNode* root, string& word) {\n    TrieNode* node = root;\n    for (char c : word) {\n        if (node->next[c - 'a'] == NULL) {\n            node->next[c - 'a'] = new TrieNode();\n        }\n        node = node->next[c - 'a'];\n    }\n    node->isEnd = true;\n}"
+  },
+  "Backtracking": {
+    "trigger": "Permutations, Combinations, Subsets, N-Queens, Exhaustive search with constraints",
+    "complexity": "Time: O(N!) or O(2^N) | Space: O(N)",
+    "code": "void backtrack(vector<int>& candidates, vector<int>& current, int target, int start) {\n    if (target == 0) {\n        result.push_back(current);\n        return;\n    }\n    \n    for (int i = start; i < candidates.size(); i++) {\n        // Pruning: skip invalid states to save time\n        if (target < candidates[i]) break;\n        // Avoid duplicate combinations if elements are not unique\n        if (i > start && candidates[i] == candidates[i - 1]) continue;\n        \n        current.push_back(candidates[i]);\n        // Pass i instead of i+1 if elements can be reused\n        backtrack(candidates, current, target - candidates[i], i + 1);\n        current.pop_back();\n    }\n}"
+  },
+  "Graph: BFS": {
+    "trigger": "Shortest path in unweighted graphs, Minimum steps to reach a state, Word Ladder",
+    "complexity": "Time: O(V + E) | Space: O(V)",
+    "code": "queue<int> q;\nunordered_set<int> visited;\n\nq.push(start_node);\nvisited.insert(start_node);\nint steps = 0;\n\nwhile (!q.empty()) {\n    int size = q.size();\n    // Process level by level to count steps correctly\n    for (int i = 0; i < size; i++) {\n        int curr = q.front();\n        q.pop();\n        \n        if (curr == target) return steps;\n        \n        for (int next_node : graph[curr]) {\n            if (!visited.contains(next_node)) {\n                visited.insert(next_node);\n                q.push(next_node);\n            }\n        }\n    }\n    steps++;\n}\nreturn -1;"
+  },
+  "Graph: Topological Sort": {
+    "trigger": "Task scheduling, Dependency resolution, Cycle detection in directed graphs, Alien Dictionary",
+    "complexity": "Time: O(V + E) | Space: O(V + E)",
+    "code": "vector<int> indegree(numCourses, 0);\nfor (auto& edge : prerequisites) {\n    graph[edge[1]].push_back(edge[0]);\n    indegree[edge[0]]++;\n}\n\nqueue<int> q;\nfor (int i = 0; i < numCourses; i++) {\n    if (indegree[i] == 0) q.push(i);\n}\n\nvector<int> order;\nwhile (!q.empty()) {\n    int curr = q.front();\n    q.pop();\n    order.push_back(curr);\n    \n    for (int next_node : graph[curr]) {\n        // Decrement indegree; if it hits 0, it's ready to be processed\n        if (--indegree[next_node] == 0) {\n            q.push(next_node);\n        }\n    }\n}\n// Important: Check for cycles\nreturn order.size() == numCourses ? order : vector<int>();"
+  },
+  "Graph: Union-Find (DSU)": {
+    "trigger": "Dynamic connectivity, Cycle detection in undirected graphs, Group/Set union and find",
+    "complexity": "Time: O(α(V)) ≈ O(1) | Space: O(V)",
+    "code": "struct DSU {\n    vector<int> parent;\n    DSU(int n) {\n        parent.resize(n);\n        iota(parent.begin(), parent.end(), 0); // Initialize with 0 ~ n-1\n    }\n    \n    int find(int i) {\n        // Path Compression is mandatory for optimal complexity\n        return parent[i] == i ? i : (parent[i] = find(parent[i]));\n    }\n    \n    bool unite(int i, int j) {\n        int root_i = find(i), root_j = find(j);\n        if (root_i == root_j) return false; // Cycle detected\n        \n        parent[root_i] = root_j;\n        return true;\n    }\n};"
+  },
+  "Graph: Dijkstra": {
+    "trigger": "Shortest path in graphs with non-negative weights, Network Delay Time, Minimum cost",
+    "complexity": "Time: O((V + E) log V) | Space: O(V + E)",
+    "code": "vector<int> dist(n, INT_MAX);\n// Min-heap storing {distance, node}\npriority_queue<pair<int, int>, vector<pair<int, int>>, greater<>> pq;\n\ndist[start] = 0;\npq.push({0, start});\n\nwhile (!pq.empty()) {\n    auto [d, u] = pq.top();\n    pq.pop();\n    \n    // Lazy deletion: skip if we've already found a shorter path to u\n    if (d > dist[u]) continue;\n    \n    for (auto& [v, weight] : graph[u]) {\n        if (dist[u] + weight < dist[v]) {\n            dist[v] = dist[u] + weight;\n            pq.push({dist[v], v});\n        }\n    }\n}"
+  },
+  "Segment Tree": {
+    "trigger": "Dynamic range queries (Sum/Max/Min) and point/range updates",
+    "complexity": "Time: O(log N) per query/update | Space: O(N)",
+    "code": "const int INVALID = -1;\n// Highly recommended to allocate 4 * N space for the tree array\n\nvoid update(vector<int>& tree, int node, int start, int end, int index, int val) {\n    if (start == end) {\n        tree[node] = val;\n        return;\n    }\n    int mid = start + (end - start) / 2;\n    if (index <= mid) update(tree, 2 * node, start, mid, index, val);\n    else update(tree, 2 * node + 1, mid + 1, end, index, val);\n    \n    tree[node] = max(tree[2 * node], tree[2 * node + 1]);\n}\n\nint query(vector<int>& tree, int node, int start, int end, int l, int r) {\n    if (r < start || l > end) return INVALID;\n    if (l <= start && end <= r) return tree[node];\n    \n    int mid = start + (end - start) / 2;\n    int left_res = query(tree, 2 * node, start, mid, l, r);\n    int right_res = query(tree, 2 * node + 1, mid + 1, end, l, r);\n    return max(left_res, right_res);\n}"
   },
   "Digit DP": {
     "trigger": "Count numbers in range [L, R] satisfying specific digit-based rules (e.g., no digit 4)",
     "complexity": "Time: O(digits * states * 10)",
-    "code": "long long memo[20][2][2][state];\nlong long dfs(int pos, bool limit, bool lead, int s, string& num) {\n    if (pos == num.size()) return 1;\n    if (memo[pos][limit][lead][s] != -1) return memo[pos][limit][lead][s];\n\n    int up = limit ? num[pos] - '0' : 9;\n    long long res = 0;\n    for (int i = 0; i <= up; i++) {\n        // [GOTCHA] 1. Correctly propagate the 'limit' flag\n        // [GOTCHA] 2. Handle 'lead zero' if it affects the digit state\n        res += dfs(pos + 1, limit && (i == up), lead && (i == 0), next_s, num);\n    }\n    return memo[pos][limit][lead][s] = res;\n}"
+    "code": "long long memo[20][2][2][state_size];\n\nlong long dfs(int pos, bool limit, bool lead, int state, const string& num) {\n    if (pos == num.size()) return 1; // Found a valid number\n    if (memo[pos][limit][lead][state] != -1) return memo[pos][limit][lead][state];\n\n    int up = limit ? num[pos] - '0' : 9;\n    long long res = 0;\n    \n    for (int i = 0; i <= up; i++) {\n        // Correctly propagate the 'limit' flag\n        bool next_limit = limit && (i == up);\n        // Handle 'lead zero' if it affects the digit state\n        bool next_lead = lead && (i == 0);\n        \n        res += dfs(pos + 1, next_limit, next_lead, next_state, num);\n    }\n    return memo[pos][limit][lead][state] = res;\n}"
   },
-  "Segment Tree": {
-    "trigger": "Dynamic range modification and range queries (Sum/Max/Min)",
-    "complexity": "Time: O(log N) per operation",
-    "code": "// [GOTCHA] Recommended array size is 4 * N\nvoid build(int node, int start, int end) {\n    if (start == end) {\n        tree[node] = arr[start];\n        return;\n    }\n    int mid = start + (end - start) / 2;\n    build(2 * node, start, mid);\n    build(2 * node + 1, mid + 1, end);\n    tree[node] = max(tree[2 * node], tree[2 * node + 1]);\n}"
+  "Bitmask DP": {
+    "trigger": "N < 20, Traveling Salesperson (TSP), State representation using bits, Subset permutations",
+    "complexity": "Time: O(2^N * N^2) | Space: O(2^N * N)",
+    "code": "// Check if the i-th bit is set in the mask\n// if ((mask & (1 << i)) != 0)\n\n// Set the i-th bit in the mask\n// int next_mask = mask | (1 << i);\n\nint dfs(int mask, int last_node) {\n    if (mask == (1 << N) - 1) return 0; // All nodes visited\n    if (memo[mask][last_node] != -1) return memo[mask][last_node];\n    \n    int best = INT_MAX;\n    for (int i = 0; i < N; i++) {\n        if ((mask & (1 << i)) == 0) { // If node 'i' is NOT visited\n            int cost = graph[last_node][i] + dfs(mask | (1 << i), i);\n            best = min(best, cost);\n        }\n    }\n    return memo[mask][last_node] = best;\n}"
   }
 }
