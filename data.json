@@ -1,27 +1,27 @@
 {
   "Monotonic Stack": {
-    "trigger": "尋找下一個更大/更小元素 (Next Greater/Smaller Element)、直方圖最大矩形、接雨水問題",
+    "trigger": "Find Next Greater/Smaller Element, Largest Rectangle in Histogram, Trapping Rain Water",
     "complexity": "Time: O(N) | Space: O(N)",
-    "code": "stack<int> st;\nfor (int i = 0; i < n; i++) {\n    // [GOTCHA] 1. 決定是嚴格大於還是包含等於\n    // [GOTCHA] 2. 建議存 index 而非 value 以便計算距離或處理視窗\n    while (!st.empty() && nums[st.top()] < nums[i]) {\n        int prev_idx = st.top();\n        st.pop();\n        // 處理找到 Next Greater Element 的邏輯\n    }\n    st.push(i);\n}"
+    "code": "stack<int> st;\nfor (int i = 0; i < n; i++) {\n    // [GOTCHA] 1. Decide if strictly greater or inclusive equal\n    // [GOTCHA] 2. Prefer storing indices over values for distance/window calculations\n    while (!st.empty() && nums[st.top()] < nums[i]) {\n        int prev_idx = st.top();\n        st.pop();\n        // Handle Next Greater Element logic here\n    }\n    st.push(i);\n}"
   },
   "Binary Search (Answer)": {
-    "trigger": "最大化最小值、最小化最大值、在具有單調性的答案空間中搜尋極值",
+    "trigger": "Maximize minimum, minimize maximum, searching in a monotonic answer space",
     "complexity": "Time: O(N log R) | Space: O(1)",
-    "code": "int l = min_val, r = max_val;\nwhile (l < r) {\n    // [GOTCHA] 若更新邏輯是 l = mid，則計算 mid 需進位：l + (r - l + 1) / 2\n    int mid = l + (r - l) / 2;\n    if (check(mid)) {\n        r = mid; // 尋找最小滿足條件者\n    } else {\n        l = mid + 1;\n    }\n}\nreturn l;"
+    "code": "int l = min_val, r = max_val;\nwhile (l < r) {\n    // [GOTCHA] If update logic is l = mid, mid needs rounding up: l + (r - l + 1) / 2\n    int mid = l + (r - l) / 2;\n    if (check(mid)) {\n        r = mid; // Seek minimum value that satisfies condition\n    } else {\n        l = mid + 1;\n    }\n}\nreturn l;"
   },
   "Union-Find (DSU)": {
-    "trigger": "動態連通性、無向圖找環、分組/集合合併與查詢",
+    "trigger": "Dynamic connectivity, cycle detection in undirected graphs, group/set union and find",
     "complexity": "Time: O(α(N)) | Space: O(N)",
-    "code": "struct DSU {\n    vector<int> p;\n    DSU(int n) {\n        p.resize(n);\n        iota(p.begin(), p.end(), 0); // [GOTCHA] 記得初始化為 0 ~ n-1\n    }\n    int find(int i) {\n        // [GOTCHA] 必須實作路徑壓縮 (Path Compression)\n        return p[i] == i ? i : (p[i] = find(p[i]));\n    }\n    void unite(int i, int j) {\n        int root_i = find(i), root_j = find(j);\n        if (root_i != root_j) p[root_i] = root_j;\n    }\n};"
+    "code": "struct DSU {\n    vector<int> p;\n    DSU(int n) {\n        p.resize(n);\n        iota(p.begin(), p.end(), 0); // [GOTCHA] Initialize with 0 ~ n-1\n    }\n    int find(int i) {\n        // [GOTCHA] Path Compression is mandatory for O(α(N))\n        return p[i] == i ? i : (p[i] = find(p[i]));\n    }\n    void unite(int i, int j) {\n        int root_i = find(i), root_j = find(j);\n        if (root_i != root_j) p[root_i] = root_j;\n    }\n};"
   },
   "Digit DP": {
-    "trigger": "計算區間 [L, R] 內滿足特定數位規則的數字數量 (如：不含 4 的數字)",
+    "trigger": "Count numbers in range [L, R] satisfying specific digit-based rules (e.g., no digit 4)",
     "complexity": "Time: O(digits * states * 10)",
-    "code": "long long memo[20][2][2][state];\nlong long dfs(int pos, bool limit, bool lead, int s, string& num) {\n    if (pos == num.size()) return 1;\n    if (memo[pos][limit][lead][s] != -1) return memo[pos][limit][lead][s];\n\n    int up = limit ? num[pos] - '0' : 9;\n    long long res = 0;\n    for (int i = 0; i <= up; i++) {\n        // [GOTCHA] 1. 注意 limit 的傳遞邏輯\n        // [GOTCHA] 2. lead zero (前導零) 可能影響計數狀態，依題意判斷\n        res += dfs(pos + 1, limit && (i == up), lead && (i == 0), next_s, num);\n    }\n    return memo[pos][limit][lead][s] = res;\n}"
+    "code": "long long memo[20][2][2][state];\nlong long dfs(int pos, bool limit, bool lead, int s, string& num) {\n    if (pos == num.size()) return 1;\n    if (memo[pos][limit][lead][s] != -1) return memo[pos][limit][lead][s];\n\n    int up = limit ? num[pos] - '0' : 9;\n    long long res = 0;\n    for (int i = 0; i <= up; i++) {\n        // [GOTCHA] 1. Correctly propagate the 'limit' flag\n        // [GOTCHA] 2. Handle 'lead zero' if it affects the digit state\n        res += dfs(pos + 1, limit && (i == up), lead && (i == 0), next_s, num);\n    }\n    return memo[pos][limit][lead][s] = res;\n}"
   },
   "Segment Tree": {
-    "trigger": "動態區間修改 (Point/Range Update) 與區間查詢 (Sum/Max/Min)",
+    "trigger": "Dynamic range modification and range queries (Sum/Max/Min)",
     "complexity": "Time: O(log N) per operation",
-    "code": "// [GOTCHA] 陣列空間建議開 4 * N\nvoid build(int node, int start, int end) {\n    if (start == end) {\n        tree[node] = arr[start];\n        return;\n    }\n    int mid = start + (end - start) / 2;\n    build(2 * node, start, mid);\n    build(2 * node + 1, mid + 1, end);\n    tree[node] = max(tree[2 * node], tree[2 * node + 1]);\n}"
+    "code": "// [GOTCHA] Recommended array size is 4 * N\nvoid build(int node, int start, int end) {\n    if (start == end) {\n        tree[node] = arr[start];\n        return;\n    }\n    int mid = start + (end - start) / 2;\n    build(2 * node, start, mid);\n    build(2 * node + 1, mid + 1, end);\n    tree[node] = max(tree[2 * node], tree[2 * node + 1]);\n}"
   }
 }

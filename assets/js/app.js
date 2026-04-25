@@ -6,7 +6,6 @@ fetch('data.json')
 
     const clear = el => { while (el.firstChild) el.removeChild(el.firstChild); };
 
-    // 初始化側邊欄選單
     Object.keys(data).forEach((topic, idx) => {
       const btn = document.createElement('button');
       btn.textContent = topic;
@@ -43,13 +42,9 @@ fetch('data.json')
       `;
 
       grid.appendChild(card);
-      
-      // 執行語法高亮
-      const codeBlock = card.querySelector('code');
-      hljs.highlightElement(codeBlock);
+      hljs.highlightElement(card.querySelector('code'));
     }
 
-    // 預設渲染第一個主題
     const firstTopic = Object.keys(data)[0];
     if (firstTopic) renderFlashcard(firstTopic, data[firstTopic]);
   });
