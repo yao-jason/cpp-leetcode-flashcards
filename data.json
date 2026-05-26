@@ -34,6 +34,11 @@
     "complexity": "Time: O(N log K) | Space: O(K)",
     "code": "// 1. Min-Heap Declaration\npriority_queue<int, vector<int>, greater<>> minHeap;\n\n// 2. Custom Comparator (Struct method)\nstruct Compare {\n    bool operator()(const vector<int>& a, const vector<int>& b) {\n        // Return true if 'a' has LOWER priority than 'b' (will be placed below 'b')\n        return a[0] > b[0]; \n    }\n};\npriority_queue<vector<int>, vector<vector<int>>, Compare> pq;\n\n// 3. Top K Pattern Maintenance\nfor (int num : nums) {\n    pq.push(num);\n    if (pq.size() > k) pq.pop();\n}"
   },
+  "Quick Select (nth_element)": {
+    "trigger": "Kth largest/smallest in an unsorted static array, Top K elements (no stream), Median finding",
+    "complexity": "Time: O(N) average, O(N^2) worst | Space: O(1) or O(log N) due to recursion stack",
+    "code": "// --- Approach 1: Using STL (Highly recommended) ---\n// Find the Kth LARGEST element in-place (k is 1-indexed, but iterators are 0-indexed)\nint k = 2;\nstd::nth_element(nums.begin(), nums.begin() + k - 1, nums.end(), greater<int>());\nreturn nums[k - 1];\n\n// --- Approach 2: Native Quick Select (Handwritten Partition) ---\n// Helper function for finding Kth Largest (using descending order partition)\nint quickSelect(vector<int>& nums, int l, int r, int k) {\n    if (l == r) return nums[l];\n    \n    int pivot = nums[r], i = l;\n    for (int j = l; j < r; j++) {\n        if (nums[j] > pivot) { // > for descending order (Kth Largest)\n            swap(nums[i], nums[j]);\n            i++;\n        }\n    }\n    swap(nums[i], nums[r]); // Place pivot at its correct sorted position 'i'\n    \n    if (i == k - 1) return nums[i];               // Found the target\n    if (i > k - 1) return quickSelect(nums, l, i - 1, k);  // Target is in left partition\n    return quickSelect(nums, i + 1, r, k);        // Target is in right partition\n}\n// Usage: return quickSelect(nums, 0, nums.size() - 1, k);"
+  },
   "Sweep Line (Intervals)": {
     "trigger": "Overlapping intervals, Meeting Rooms, Maximum concurrent events, Skyline problem",
     "complexity": "Time: O(N log N) | Space: O(N)",
