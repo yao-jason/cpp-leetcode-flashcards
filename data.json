@@ -67,7 +67,7 @@
   "Graph: Union-Find (DSU)": {
     "trigger": "Dynamic connectivity, Cycle detection in undirected graphs, Group/Set union and find",
     "complexity": "Time: O(α(V)) ≈ O(1) | Space: O(V)",
-    "code": "struct DSU {\n    vector<int> parent;\n    DSU(int n) {\n        parent.resize(n);\n        iota(parent.begin(), parent.end(), 0); // Initialize with 0 ~ n-1\n    }\n    \n    int find(int i) {\n        // Path Compression is mandatory for optimal complexity\n        return parent[i] == i ? i : (parent[i] = find(parent[i]));\n    }\n    \n    bool unite(int i, int j) {\n        int root_i = find(i), root_j = find(j);\n        if (root_i == root_j) return false; // Cycle detected\n        \n        parent[root_i] = root_j;\n        return true;\n    }\n};"
+    "code": "struct DSU {\n    vector<int> parent, sz;\n    DSU(int n) {\n        parent.resize(n);\n        sz.assign(n, 1);\n        iota(parent.begin(), parent.end(), 0);\n    }\n    \n    int find(int i) {\n        while (i != parent[i]) {    // Iterative Path Halving for optimal speed & space\n            parent[i] = parent[parent[i]];\n            i = parent[i];\n        }\n        return i;\n    }\n    \n    bool unite(int i, int j) {\n        int root_i = find(i), root_j = find(j);\n        if (root_i == root_j) return false;\n        \n        if (sz[root_i] < sz[root_j]) swap(root_i, root_j);  // Union by Size: attach smaller tree to larger tree\n        parent[root_j] = root_i;\n        sz[root_i] += sz[root_j];\n        return true;\n    }\n};"
   },
   "Graph: Dijkstra": {
     "trigger": "Shortest path in graphs with non-negative weights, Network Delay Time, Minimum cost",
