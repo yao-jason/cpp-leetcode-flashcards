@@ -93,5 +93,15 @@
     "trigger": "N < 20, Traveling Salesperson (TSP), State representation using bits, Subset permutations",
     "complexity": "Time: O(2^N * N^2) | Space: O(2^N * N)",
     "code": "// Check if the i-th bit is set in the mask\n// if ((mask & (1 << i)) != 0)\n\n// Set the i-th bit in the mask\n// int next_mask = mask | (1 << i);\n\nint dfs(int mask, int last_node) {\n    if (mask == (1 << N) - 1) return 0; // All nodes visited\n    if (memo[mask][last_node] != -1) return memo[mask][last_node];\n    \n    int best = INT_MAX;\n    for (int i = 0; i < N; i++) {\n        if ((mask & (1 << i)) == 0) { // If node 'i' is NOT visited\n            int cost = graph[last_node][i] + dfs(mask | (1 << i), i);\n            best = min(best, cost);\n        }\n    }\n    return memo[mask][last_node] = best;\n}"
+  },
+  "Modulo Inverse & Comb(n, k)": {
+    "trigger": "Count 'number of ways' or permutations/combinations, return answer modulo 10^9+7",
+    "complexity": "Time: O(N log MOD) for prep, O(1) per query | Space: O(N)",
+    "code": "int MOD = 1e9 + 7;\n\n// Fast exponentiation: computes (base^exp) % MOD\nlong long power(long long base, long long exp) {\n    long long res = 1;\n    base %= MOD;\n    while (exp > 0) {\n        if (exp % 2 == 1) res = (res * base) % MOD;\n        base = (base * base) % MOD;\n        exp /= 2;\n    }\n    return res;\n}\n\n// Fermat's Little Theorem: a^-1 ≡ a^(p-2) (mod p)\nlong long modInverse(long long n) {\n    return power(n, MOD - 2);\n}\n\n// nCr % MOD\nlong long nCr(int n, int r, vector<long long>& fact) {\n    if (r < 0 || r > n) return 0;\n    long long num = fact[n];\n    long long den = (fact[r] * fact[n - r]) % MOD;\n    return (num * modInverse(den)) % MOD;\n}"
+  },
+  "Rolling Hash (Rabin-Karp)": {
+    "trigger": "Substring search, Longest Duplicate Substring, Substring hashing to avoid TLE/MLE",
+    "complexity": "Time: O(N) | Space: O(N)",
+    "code": "long long MOD = 1e9 + 7;\nlong long BASE = 131;\n\nvector<long long> hash_val(n + 1, 0);\nvector<long long> power(n + 1, 1);\n\n// Precompute hashes and powers of BASE\nfor (int i = 0; i < n; i++) {\n    power[i + 1] = (power[i] * BASE) % MOD;\n    // Take modulo after each addition and multiplication\n    hash_val[i + 1] = (hash_val[i] * BASE + (s[i] - 'a' + 1)) % MOD;\n}\n\n// Function to get hash of substring s[L...R] (0-indexed)\n// Gotcha: h1 - h2 can be negative in C++.\n// Must add MOD before taking the final modulo to ensure a positive result.\nlong long getHash(int L, int R) {\n    long long h1 = hash_val[R + 1];\n    long long h2 = (hash_val[L] * power[R - L + 1]) % MOD;\n    return (h1 - h2 + MOD) % MOD;\n}"
   }
 }
