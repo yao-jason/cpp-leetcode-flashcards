@@ -1,30 +1,4 @@
 {
-  "HashMap Patterns": {
-    "trigger": "Find pairs or complements in O(N), Group elements by a shared key property, Frequency counting, Longest consecutive run",
-    "complexity": "Time: O(N) | Space: O(N)",
-    "code": "// --- Pattern 1: Two Sum — complement lookup ---\nunordered_map<int, int> seen; // value -> index\nfor (int i = 0; i < (int)nums.size(); i++) {\n    int complement = target - nums[i];\n    if (seen.count(complement)) return {seen[complement], i};\n    seen[nums[i]] = i; // Insert AFTER checking to avoid self-pairing\n}\n\n// --- Pattern 2: Group Anagrams — sorted string as key ---\nunordered_map<string, vector<string>> groups;\nfor (const string& s : strs) {\n    string key = s;\n    sort(key.begin(), key.end());\n    groups[key].push_back(s);\n}\n\n// --- Pattern 3: Longest Consecutive Sequence ---\nunordered_set<int> numSet(nums.begin(), nums.end());\nint longest = 0;\nfor (int num : numSet) {\n    if (!numSet.count(num - 1)) {  // Only start from sequence beginning\n        int cur = num, len = 1;\n        while (numSet.count(++cur)) len++;\n        longest = max(longest, len);\n    }\n}",
-    "gotchas": "For Two Sum: insert the current element into the map AFTER checking for its complement — this prevents using the same element twice (e.g., target=6, nums=[3]). Prefer `unordered_map` (O(1) avg) over `map` (O(log N)). For consecutive sequence, start the chain only when `num-1` is absent to avoid O(N²) inner loops.",
-    "problems": [
-      "LC 1. Two Sum",
-      "LC 49. Group Anagrams",
-      "LC 128. Longest Consecutive Sequence"
-    ],
-    "category": "Array",
-    "difficulty": "Easy"
-  },
-  "Prefix Sum": {
-    "trigger": "O(1) range sum after O(N) preprocessing, Count subarrays summing to a target, Cumulative property queries over arbitrary ranges",
-    "complexity": "Time: O(N) build, O(1) query | Space: O(N)",
-    "code": "// --- 1D Prefix Sum ---\nint n = nums.size();\nvector<int> prefix(n + 1, 0); // prefix[0] = 0 (empty prefix)\nfor (int i = 0; i < n; i++)\n    prefix[i + 1] = prefix[i] + nums[i];\n\n// Range sum of nums[l..r] (0-indexed, inclusive)\nint rangeSum = prefix[r + 1] - prefix[l];\n\n// --- Prefix Sum + HashMap (Subarray Sum = K) ---\n// Count subarrays where sum == k\nunordered_map<int, int> freq;\nfreq[0] = 1;  // Base case: a subarray starting at index 0\nint count = 0, running_sum = 0;\n\nfor (int num : nums) {\n    running_sum += num;\n    // If (running_sum - k) was seen before, those prefixes form valid subarrays\n    count += freq[running_sum - k];\n    freq[running_sum]++;\n}",
-    "gotchas": "Use 1-indexed prefix array: `prefix[i]` = sum of first i elements, so `prefix[0] = 0`. Range sum [l, r] = `prefix[r+1] - prefix[l]`. For the hashmap variant, ALWAYS initialize `freq[0] = 1` before the loop to correctly count subarrays that start at index 0. For negative numbers, `unordered_map` still works correctly.",
-    "problems": [
-      "LC 303. Range Sum Query - Immutable",
-      "LC 560. Subarray Sum Equals K",
-      "LC 238. Product of Array Except Self"
-    ],
-    "category": "Array",
-    "difficulty": "Easy"
-  },
   "Two Pointers": {
     "trigger": "Pairs summing to target in a sorted array, Palindrome check, Remove duplicates in-place, Maximize the span between two boundaries",
     "complexity": "Time: O(N) | Space: O(1)",
@@ -41,7 +15,7 @@
   "Sliding Window": {
     "trigger": "Longest/Shortest subarray or substring matching a condition, At most K distinct elements, Minimum window containing all characters",
     "complexity": "Time: O(N) | Space: O(1) or O(K)",
-    "code": "int l = 0, best = 0;\nfor (int r = 0; r < n; r++) {\n    // 1. Expand: add nums[r] to the current window state\n    state.add(nums[r]);\n\n    // 2. Shrink: contract from left until window is valid again\n    while (invalid(state)) {\n        state.remove(nums[l]);\n        l++;\n    }\n\n    // 3. Update global optimum (window is now valid)\n    best = max(best, r - l + 1);\n}\n\n// --- Fixed-size window variant ---\nfor (int r = 0; r < n; r++) {\n    state.add(nums[r]);\n    if (r >= k) state.remove(nums[r - k]); // Evict element leaving window\n    if (r >= k - 1) best = max(best, state.value());\n}",
+    "code": "// --- Variable-size window (shrink when invalid) ---\nunordered_map<int,int> freq;\nint l = 0, best = 0;\nfor (int r = 0; r < n; r++) {\n    freq[nums[r]]++;                             // 1. Expand: include nums[r]\n    while ((int)freq.size() > k) {               // 2. Shrink until valid\n        if (--freq[nums[l]] == 0) freq.erase(nums[l]);\n        l++;\n    }\n    best = max(best, r - l + 1);                 // 3. Update optimum\n}\n\n// --- Fixed-size window (evict left when window exceeds k) ---\nfor (int r = 0; r < n; r++) {\n    freq[nums[r]]++;\n    if (r >= k) { if (--freq[nums[r-k]] == 0) freq.erase(nums[r-k]); } // Evict\n    if (r >= k-1) best = max(best, (int)freq.size()); // or whatever metric\n}",
     "gotchas": "Track what makes a window 'invalid' carefully — the shrink condition is the key insight. For character problems, use `unordered_map<char,int>` or `int freq[26]` as state. Always update state incrementally (never rescan). For minimum-window problems, shrink when valid (not when invalid).",
     "problems": [
       "LC 3. Longest Substring Without Repeating Characters",
@@ -77,10 +51,36 @@
     "category": "Array",
     "difficulty": "Medium"
   },
+  "Prefix Sum": {
+    "trigger": "O(1) range sum after O(N) preprocessing, Count subarrays summing to a target, Cumulative property queries over arbitrary ranges",
+    "complexity": "Time: O(N) build, O(1) query | Space: O(N)",
+    "code": "// --- 1D Prefix Sum ---\nint n = nums.size();\nvector<int> prefix(n + 1, 0); // prefix[0] = 0 (empty prefix)\nfor (int i = 0; i < n; i++)\n    prefix[i + 1] = prefix[i] + nums[i];\n\n// Range sum of nums[l..r] (0-indexed, inclusive)\nint rangeSum = prefix[r + 1] - prefix[l];\n\n// --- Prefix Sum + HashMap (Subarray Sum = K) ---\n// Count subarrays where sum == k\nunordered_map<int, int> freq;\nfreq[0] = 1;  // Base case: a subarray starting at index 0\nint count = 0, running_sum = 0;\n\nfor (int num : nums) {\n    running_sum += num;\n    // If (running_sum - k) was seen before, those prefixes form valid subarrays\n    count += freq[running_sum - k];\n    freq[running_sum]++;\n}",
+    "gotchas": "Use 1-indexed prefix array: `prefix[i]` = sum of first i elements, so `prefix[0] = 0`. Range sum [l, r] = `prefix[r+1] - prefix[l]`. For the hashmap variant, ALWAYS initialize `freq[0] = 1` before the loop to correctly count subarrays that start at index 0. For negative numbers, `unordered_map` still works correctly.",
+    "problems": [
+      "LC 303. Range Sum Query - Immutable",
+      "LC 560. Subarray Sum Equals K",
+      "LC 238. Product of Array Except Self"
+    ],
+    "category": "Array",
+    "difficulty": "Easy"
+  },
+  "HashMap (Complement / Grouping)": {
+    "trigger": "Find pairs or complements in O(N), Group elements by a shared key property, Frequency counting, Longest consecutive run",
+    "complexity": "Time: O(N) | Space: O(N)",
+    "code": "// --- Pattern 1: Two Sum — complement lookup ---\nunordered_map<int, int> seen; // value -> index\nfor (int i = 0; i < (int)nums.size(); i++) {\n    int complement = target - nums[i];\n    if (seen.count(complement)) return {seen[complement], i};\n    seen[nums[i]] = i; // Insert AFTER checking to avoid self-pairing\n}\n\n// --- Pattern 2: Group Anagrams — sorted string as key ---\nunordered_map<string, vector<string>> groups;\nfor (const string& s : strs) {\n    string key = s;\n    sort(key.begin(), key.end());\n    groups[key].push_back(s);\n}\n\n// --- Pattern 3: Longest Consecutive Sequence ---\nunordered_set<int> numSet(nums.begin(), nums.end());\nint longest = 0;\nfor (int num : numSet) {\n    if (!numSet.count(num - 1)) {  // Only start from sequence beginning\n        int cur = num, len = 1;\n        while (numSet.count(++cur)) len++;\n        longest = max(longest, len);\n    }\n}",
+    "gotchas": "For Two Sum: insert the current element into the map AFTER checking for its complement — this prevents using the same element twice (e.g., target=6, nums=[3]). Prefer `unordered_map` (O(1) avg) over `map` (O(log N)). For consecutive sequence, start the chain only when `num-1` is absent to avoid O(N²) inner loops.",
+    "problems": [
+      "LC 1. Two Sum",
+      "LC 49. Group Anagrams",
+      "LC 128. Longest Consecutive Sequence"
+    ],
+    "category": "Array",
+    "difficulty": "Easy"
+  },
   "Monotonic Deque": {
     "trigger": "Maximum or minimum in every sliding window of size K, Subarray with constraint on range (max - min)",
     "complexity": "Time: O(N) | Space: O(K)",
-    "code": "// --- Sliding Window Maximum (LC 239) ---\n// deque stores INDICES; front is always the index of the max in current window\ndeque<int> dq;\nvector<int> result;\n\nfor (int i = 0; i < (int)nums.size(); i++) {\n    // 1. Remove indices that have fallen outside the current window\n    while (!dq.empty() && dq.front() < i - k + 1)\n        dq.pop_front();\n\n    // 2. Remove indices from the back whose values are <= nums[i]\n    //    (they can never be the max of any future window)\n    while (!dq.empty() && nums[dq.back()] <= nums[i])\n        dq.pop_back();\n\n    dq.push_back(i);\n\n    // 3. Window is fully formed: record the max (front of deque)\n    if (i >= k - 1)\n        result.push_back(nums[dq.front()]);\n}\nreturn result;",
+    "code": "// deque stores INDICES; front = index of max in current window\ndeque<int> dq;\nvector<int> result;\nfor (int i = 0; i < (int)nums.size(); i++) {\n    while (!dq.empty() && dq.front() < i - k + 1) dq.pop_front();  // 1. expire old front\n    while (!dq.empty() && nums[dq.back()] <= nums[i]) dq.pop_back(); // 2. pop smaller back\n    dq.push_back(i);                                                  // 3. push current\n    if (i >= k - 1) result.push_back(nums[dq.front()]);              // 4. record max\n}\nreturn result;",
     "gotchas": "Store INDICES in the deque, not values — needed to check if front is outside the window. Step order matters: (1) remove expired front, (2) remove smaller back, (3) push current, (4) record result. Use `<=` when removing from back for max-deque to handle duplicates correctly.",
     "problems": [
       "LC 239. Sliding Window Maximum",
@@ -116,7 +116,7 @@
     "category": "Array",
     "difficulty": "Hard"
   },
-  "Monotonic Stack": {
+  "Monotonic Stack (NGE)": {
     "trigger": "Next greater or smaller element at each index, Maximum area enclosed within a bounded histogram, Volume of water trapped between elevation walls",
     "complexity": "Time: O(N) | Space: O(N)",
     "code": "// Store INDICES in the stack (not values) to compute distances\nstack<int> st; // Decreasing stack: top is smallest -> finds Next Greater\n\nfor (int i = 0; i < n; i++) {\n    // Pop while current element is greater than stack top\n    // (adjust condition for increasing stack / next smaller element)\n    while (!st.empty() && nums[st.top()] < nums[i]) {\n        int prev_idx = st.top();\n        st.pop();\n        // Process: nums[i] is the Next Greater Element for nums[prev_idx]\n        // Distance to next greater: i - prev_idx\n        result[prev_idx] = i - prev_idx;\n    }\n    st.push(i);\n}\n// Remaining elements in stack have no next greater element",
@@ -155,7 +155,7 @@
     "category": "Heap",
     "difficulty": "Medium"
   },
-  "Linked List": {
+  "Linked List (Reverse / Fast-Slow)": {
     "trigger": "Reverse a linked list in-place, Find the middle node with fast/slow pointers, Detect and locate a cycle (Floyd's algorithm)",
     "complexity": "Time: O(N) | Space: O(1)",
     "code": "// --- Reverse Linked List (iterative) ---\nListNode* prev = nullptr;\nListNode* curr = head;\nwhile (curr != nullptr) {\n    ListNode* next_temp = curr->next; // Save before overwriting\n    curr->next = prev;\n    prev = curr;\n    curr = next_temp;\n}\n// prev is the new head\n\n// --- Fast & Slow Pointers ---\nListNode *slow = head, *fast = head;\nwhile (fast != nullptr && fast->next != nullptr) {\n    slow = slow->next;\n    fast = fast->next->next;\n    if (slow == fast) break; // Cycle detected\n}\n// slow is at the middle (for even-length: second of two middles)\n\n// --- Find cycle start (after detecting cycle above) ---\nListNode* ptr = head;\nwhile (ptr != slow) { // Reset one pointer to head; advance both by 1\n    ptr = ptr->next;\n    slow = slow->next;\n}\n// ptr == slow == cycle start node",
@@ -168,7 +168,7 @@
     "category": "Linked List",
     "difficulty": "Medium"
   },
-  "BFS / DFS Traversal": {
+  "Tree Traversal (BFS / DFS)": {
     "trigger": "Level-by-level traversal, Lowest Common Ancestor (LCA), Tree height and diameter, Root-to-leaf path conditions",
     "complexity": "Time: O(N) | Space: O(H) DFS, O(N) BFS",
     "code": "// --- DFS: Bottom-Up (compute and return state from children) ---\nint dfs(TreeNode* root) {\n    if (!root) return 0; // Base case\n    int left  = dfs(root->left);\n    int right = dfs(root->right);\n    // Process: use left and right subtree results\n    diameter = max(diameter, left + right); // e.g., for tree diameter\n    return max(left, right) + 1;\n}\n\n// --- LCA (Lowest Common Ancestor) ---\nTreeNode* lca(TreeNode* root, TreeNode* p, TreeNode* q) {\n    if (!root || root == p || root == q) return root;\n    TreeNode* left  = lca(root->left, p, q);\n    TreeNode* right = lca(root->right, p, q);\n    if (left && right) return root; // p and q in different subtrees\n    return left ? left : right;\n}\n\n// --- BFS: Level Order ---\nqueue<TreeNode*> q;\nif (root) q.push(root);\nwhile (!q.empty()) {\n    int size = q.size(); // Snapshot size BEFORE processing this level\n    for (int i = 0; i < size; i++) {\n        TreeNode* node = q.front(); q.pop();\n        if (node->left)  q.push(node->left);\n        if (node->right) q.push(node->right);\n    }\n}",
@@ -194,7 +194,7 @@
     "category": "Tree",
     "difficulty": "Medium"
   },
-  "Serialize & Construct": {
+  "Tree (Serialize / Reconstruct)": {
     "trigger": "Serialize and reconstruct a binary tree using null markers, Rebuild a tree from two complementary traversal sequences",
     "complexity": "Time: O(N) | Space: O(N)",
     "code": "// --- Serialize: Preorder with '#' as null markers ---\nstring serialize(TreeNode* root) {\n    if (!root) return \"#,\";\n    return to_string(root->val) + \",\" + serialize(root->left) + serialize(root->right);\n}\n\n// --- Deserialize: Preorder reconstruction ---\nTreeNode* deserializeHelper(istringstream& ss) {\n    string val;\n    getline(ss, val, ',');\n    if (val == \"#\") return nullptr;\n    TreeNode* node = new TreeNode(stoi(val));\n    node->left  = deserializeHelper(ss);\n    node->right = deserializeHelper(ss);\n    return node;\n}\nTreeNode* deserialize(string data) {\n    istringstream ss(data);\n    return deserializeHelper(ss);\n}\n\n// --- Construct from Preorder + Inorder (use a hashmap for O(N)) ---\nunordered_map<int, int> inorderIdx;\nTreeNode* build(vector<int>& pre, int preL,\n                vector<int>& in,  int inL, int inR) {\n    if (inL > inR) return nullptr;\n    TreeNode* root = new TreeNode(pre[preL]);\n    int mid = inorderIdx[pre[preL]]; // O(1) lookup\n    int leftSize = mid - inL;\n    root->left  = build(pre, preL + 1,            in, inL,       mid - 1);\n    root->right = build(pre, preL + 1 + leftSize, in, mid + 1,   inR);\n    return root;\n}",
@@ -207,10 +207,10 @@
     "category": "Tree",
     "difficulty": "Hard"
   },
-  "Backtracking": {
+  "Backtracking (Perm / Comb / Subset)": {
     "trigger": "Generate all permutations, combinations, or subsets, Constraint-satisfying exhaustive search (e.g., N-Queens), Explore all valid configurations with pruning",
     "complexity": "Time: O(N!) permutations, O(2^N) subsets | Space: O(N)",
-    "code": "// --- Combination Template (sorted input, avoid duplicates) ---\nvoid backtrack_comb(vector<int>& candidates, vector<int>& cur, int target, int start) {\n    if (target == 0) { result.push_back(cur); return; }\n    for (int i = start; i < (int)candidates.size(); i++) {\n        if (candidates[i] > target) break;              // Pruning\n        if (i > start && candidates[i] == candidates[i-1]) continue; // Skip duplicates\n        cur.push_back(candidates[i]);\n        backtrack_comb(candidates, cur, target - candidates[i], i + 1); // i+1: no reuse\n        cur.pop_back();\n    }\n}\n\n// --- Permutation Template (sort first if duplicates possible) ---\nvoid backtrack_perm(vector<int>& nums, vector<int>& cur, vector<bool>& visited) {\n    if ((int)cur.size() == (int)nums.size()) { result.push_back(cur); return; }\n    for (int i = 0; i < (int)nums.size(); i++) {\n        if (visited[i]) continue;\n        // Skip: same value AND previous (same value) was NOT used in this path\n        if (i > 0 && nums[i] == nums[i-1] && !visited[i-1]) continue;\n        visited[i] = true;\n        cur.push_back(nums[i]);\n        backtrack_perm(nums, cur, visited);\n        cur.pop_back();\n        visited[i] = false;\n    }\n}",
+    "code": "// --- Combination (sorted input, skip duplicates, no reuse) ---\nvoid backtrack_comb(vector<int>& cands, vector<int>& cur, int target, int start) {\n    if (target == 0) { result.push_back(cur); return; }\n    for (int i = start; i < (int)cands.size(); i++) {\n        if (cands[i] > target) break;                                        // prune: sorted\n        if (i > start && cands[i] == cands[i-1]) continue;                  // skip dup\n        cur.push_back(cands[i]);\n        backtrack_comb(cands, cur, target - cands[i], i + 1); // i+1 = no reuse\n        cur.pop_back();\n    }\n}\n\n// --- Permutation (sort first; visited[] tracks current path) ---\nvoid backtrack_perm(vector<int>& nums, vector<int>& cur, vector<bool>& vis) {\n    if ((int)cur.size() == (int)nums.size()) { result.push_back(cur); return; }\n    for (int i = 0; i < (int)nums.size(); i++) {\n        if (vis[i]) continue;\n        if (i > 0 && nums[i] == nums[i-1] && !vis[i-1]) continue;           // skip dup\n        vis[i] = true; cur.push_back(nums[i]);\n        backtrack_perm(nums, cur, vis);\n        cur.pop_back(); vis[i] = false;\n    }\n}",
     "gotchas": "Two distinct patterns: (1) Combinations use a `start` index to prevent revisiting. (2) Permutations use a `visited[]` array (all positions are candidates each time). For permutation deduplication: sort first, then `if (i > 0 && nums[i] == nums[i-1] && !visited[i-1]) continue` — the `!visited[i-1]` condition is subtle but critical.",
     "problems": [
       "LC 39. Combination Sum",
@@ -220,7 +220,7 @@
     "category": "Backtracking",
     "difficulty": "Medium"
   },
-  "BFS": {
+  "BFS (Shortest Path)": {
     "trigger": "Shortest path in an unweighted graph, Minimum transformations between states, Bipartite graph verification",
     "complexity": "Time: O(V + E) | Space: O(V)",
     "code": "queue<int> q;\nunordered_set<int> visited;\n\nq.push(start_node);\nvisited.insert(start_node); // Mark WHEN ENQUEUING (not dequeuing!)\nint steps = 0;\n\nwhile (!q.empty()) {\n    int size = q.size(); // Process level by level\n    for (int i = 0; i < size; i++) {\n        int curr = q.front(); q.pop();\n\n        if (curr == target) return steps;\n\n        for (int next_node : graph[curr]) {\n            if (!visited.count(next_node)) {\n                visited.insert(next_node); // Mark BEFORE pushing\n                q.push(next_node);\n            }\n        }\n    }\n    steps++;\n}",
@@ -233,7 +233,7 @@
     "category": "Graph",
     "difficulty": "Medium"
   },
-  "DFS + Cycle Detection": {
+  "DFS (Cycle Detection)": {
     "trigger": "Detect cycle in directed graph, Validate DAG, Find safe nodes (nodes that don't lead to a cycle), DFS-based connected components",
     "complexity": "Time: O(V + E) | Space: O(V)",
     "code": "// --- DFS 3-Color Cycle Detection (Directed Graph) ---\n// WHITE=0 (unvisited), GRAY=1 (in current DFS stack), BLACK=2 (fully done)\nvector<int> color(n, 0);\nbool hasCycle = false;\n\nfunction<void(int)> dfs = [&](int u) {\n    color[u] = 1; // Mark GRAY\n    for (int v : graph[u]) {\n        if (color[v] == 1) { hasCycle = true; return; } // Back edge = cycle!\n        if (color[v] == 0) dfs(v);\n    }\n    color[u] = 2; // Mark BLACK (fully processed)\n};\n\nfor (int i = 0; i < n; i++)\n    if (color[i] == 0) dfs(i);\n\n// --- DFS Cycle Detection (Undirected Graph) ---\n// Track parent to avoid treating the edge we came from as a back edge\nfunction<bool(int, int)> dfsCycle = [&](int u, int parent) -> bool {\n    color[u] = 1;\n    for (int v : graph[u]) {\n        if (v == parent) continue;  // Ignore the edge we came from\n        if (color[v] == 1) return true; // Back edge = cycle\n        if (color[v] == 0 && dfsCycle(v, u)) return true;\n    }\n    color[u] = 2;\n    return false;\n};",
@@ -246,10 +246,10 @@
     "category": "Graph",
     "difficulty": "Medium"
   },
-  "Grid Traversal": {
+  "Grid (DFS / Multi-Source BFS)": {
     "trigger": "Count or flood-fill connected regions in a matrix, Shortest path through a grid, Multi-source BFS (enqueue all sources simultaneously)",
     "complexity": "Time: O(M*N) | Space: O(M*N)",
-    "code": "// 4-directional movement vectors\nconst int dx[] = {0, 0, 1, -1};\nconst int dy[] = {1, -1, 0, 0};\nint m = grid.size(), n = grid[0].size();\n\n// --- Grid DFS (Flood Fill / Island marking) ---\n// Modify grid in-place to mark visited (avoids separate visited array)\nvoid dfs(vector<vector<char>>& grid, int r, int c) {\n    if (r < 0 || r >= m || c < 0 || c >= n || grid[r][c] != '1') return;\n    grid[r][c] = '0'; // Mark visited in-place\n    for (int d = 0; d < 4; d++)\n        dfs(grid, r + dx[d], c + dy[d]);\n}\n\n// --- Grid BFS (Shortest Path / Multi-source) ---\nqueue<pair<int,int>> q;\nvector<vector<int>> dist(m, vector<int>(n, -1));\n\nfor (int r = 0; r < m; r++)        // Enqueue ALL sources at once\n    for (int c = 0; c < n; c++)\n        if (grid[r][c] == '2') { q.push({r, c}); dist[r][c] = 0; }\n\nwhile (!q.empty()) {\n    auto [r, c] = q.front(); q.pop();\n    for (int d = 0; d < 4; d++) {\n        int nr = r + dx[d], nc = c + dy[d];\n        if (nr >= 0 && nr < m && nc >= 0 && nc < n && dist[nr][nc] == -1) {\n            dist[nr][nc] = dist[r][c] + 1;\n            q.push({nr, nc});\n        }\n    }\n}",
+    "code": "const int dx[] = {0, 0, 1, -1};\nconst int dy[] = {1, -1, 0, 0};\nint m = grid.size(), n = grid[0].size();\n\n// --- Grid DFS (flood fill / island marking) ---\nvoid dfs(vector<vector<char>>& grid, int r, int c) {\n    if (r < 0 || r >= m || c < 0 || c >= n || grid[r][c] != '1') return;\n    grid[r][c] = '0';                           // mark visited in-place\n    for (int d = 0; d < 4; d++) dfs(grid, r + dx[d], c + dy[d]);\n}\n\n// --- Grid BFS (shortest path / multi-source) ---\nqueue<pair<int,int>> q;\nvector<vector<int>> dist(m, vector<int>(n, -1));\nfor (int r = 0; r < m; r++)                     // enqueue ALL sources first\n    for (int c = 0; c < n; c++)\n        if (grid[r][c] == SOURCE) { q.push({r,c}); dist[r][c] = 0; }\nwhile (!q.empty()) {\n    auto [r, c] = q.front(); q.pop();\n    for (int d = 0; d < 4; d++) {\n        int nr = r+dx[d], nc = c+dy[d];\n        if (nr>=0 && nr<m && nc>=0 && nc<n && dist[nr][nc]==-1) {\n            dist[nr][nc] = dist[r][c] + 1; q.push({nr, nc});\n        }\n    }\n}",
     "gotchas": "Always check BOTH bounds AND visited status before enqueuing or recursing. In-place modification (`grid[r][c] = '0'`) avoids a separate `visited` matrix. For multi-source BFS (e.g., Rotting Oranges), enqueue ALL sources BEFORE starting BFS — don't process them sequentially. Mark visited when enqueuing (not dequeuing).",
     "problems": [
       "LC 200. Number of Islands",
@@ -259,7 +259,7 @@
     "category": "Graph",
     "difficulty": "Medium"
   },
-  "Topological Sort": {
+  "Topological Sort (Kahn's)": {
     "trigger": "Order tasks with prerequisites, Detect impossible scheduling cycles, Reconstruct a valid execution sequence from dependency rules",
     "complexity": "Time: O(V + E) | Space: O(V + E)",
     "code": "// Kahn's Algorithm (BFS-based)\nvector<int> indegree(numCourses, 0);\nvector<vector<int>> graph(numCourses);\nfor (const vector<int>& edge : prerequisites) {\n    graph[edge[1]].push_back(edge[0]); // edge[1] -> edge[0]\n    indegree[edge[0]]++;\n}\n\nqueue<int> q;\nfor (int i = 0; i < numCourses; i++)\n    if (indegree[i] == 0) q.push(i); // Start with nodes with no prerequisites\n\nvector<int> order;\nwhile (!q.empty()) {\n    int curr = q.front(); q.pop();\n    order.push_back(curr);\n    for (int next : graph[curr]) {\n        if (--indegree[next] == 0) q.push(next);\n    }\n}\n\n// If order.size() != numCourses, a cycle exists (impossible ordering)\nreturn (int)order.size() == numCourses ? order : vector<int>();",
@@ -286,7 +286,7 @@
     "difficulty": "Medium"
   },
   "Dijkstra": {
-    "trigger": "Shortest path in a weighted graph with non-negative edges, Minimum cost to reach all nodes from a source",
+    "trigger": "Shortest path in a weighted graph with non-negative edges, Minimum cost to reach all nodes from a source, Implicit state graph (e.g., minimum cost with constraints on steps or fuel)",
     "complexity": "Time: O((V + E) log V) | Space: O(V + E)",
     "code": "// Build adjacency list: graph[u] = {{v, weight}, ...}\nvector<vector<pair<int,int>>> graph(n);\nfor (auto& e : edges)\n    graph[e[0]].push_back({e[1], e[2]});\n\nvector<int> dist(n, INT_MAX);\n// Min-heap: {distance, node}\npriority_queue<pair<int,int>, vector<pair<int,int>>, greater<>> pq;\n\ndist[start] = 0;\npq.push({0, start});\n\nwhile (!pq.empty()) {\n    auto [d, u] = pq.top(); pq.pop();\n\n    // Lazy deletion: skip stale entries (already found a shorter path to u)\n    if (d > dist[u]) continue;\n\n    for (auto& [v, weight] : graph[u]) {\n        if (dist[u] + weight < dist[v]) {\n            dist[v] = dist[u] + weight;\n            pq.push({dist[v], v});\n        }\n    }\n}",
     "gotchas": "Dijkstra does NOT work with NEGATIVE edge weights (use Bellman-Ford instead). The `if (d > dist[u]) continue;` 'lazy deletion' check is critical — without it, stale priority queue entries cause incorrect results. Initialize `dist` to INT_MAX and check for overflow when computing `dist[u] + weight`.",
@@ -298,8 +298,8 @@
     "category": "Graph",
     "difficulty": "Medium"
   },
-  "Greedy": {
-    "trigger": "Interval Scheduling (non-overlapping), Minimum jumps, Task assignment. Use ONLY when local optimum guarantees global optimum — always verify with a counterexample.",
+  "Greedy (Interval / Sort-by-End)": {
+    "trigger": "Interval scheduling (maximize non-overlapping intervals), Minimum jumps or steps to reach the end, Sort by a greedy criterion (e.g., earliest end time) and pick greedily",
     "complexity": "Time: O(N log N) for sorting | Space: O(1)",
     "code": "// --- Non-overlapping Intervals (sort by END time) ---\nsort(intervals.begin(), intervals.end(), [](const vector<int>& a, const vector<int>& b) {\n    return a[1] < b[1]; // Sort by END time, not start time\n});\n\nint count = 0, current_end = INT_MIN;\nfor (const vector<int>& interval : intervals) {\n    if (interval[0] >= current_end) { // No overlap: greedy pick\n        count++;\n        current_end = interval[1];\n    }\n}\n\n// --- Jump Game II (minimum jumps to reach end) ---\nint jumps = 0, cur_end = 0, farthest = 0;\nfor (int i = 0; i < (int)nums.size() - 1; i++) {\n    farthest = max(farthest, i + nums[i]);\n    if (i == cur_end) { // Must jump here\n        jumps++;\n        cur_end = farthest;\n    }\n}",
     "gotchas": "For interval scheduling, sort by END time (not start time). Sorting by start time is incorrect and a common mistake. Always ask yourself: 'Can a counterexample disprove this greedy?' Greedy is NOT always applicable — if in doubt, try DP first.",
@@ -311,7 +311,7 @@
     "category": "Greedy",
     "difficulty": "Medium"
   },
-  "Linear DP": {
+  "Linear DP (1D / LIS)": {
     "trigger": "Optimal decision at each step depends on a fixed number of prior states, Binary choice (take or skip) at each element, Longest strictly increasing subsequence",
     "complexity": "Time: O(N) or O(N log N) for LIS | Space: O(1) or O(N)",
     "code": "// --- House Robber (O(N) time, O(1) space) ---\n// dp[i] = max money from first i houses\n// Recurrence: dp[i] = max(dp[i-1], dp[i-2] + nums[i])\nint prev2 = 0, prev1 = 0;\nfor (int num : nums) {\n    int cur = max(prev1, prev2 + num);\n    prev2 = prev1;\n    prev1 = cur;\n}\nint result = prev1;\n\n// --- Longest Increasing Subsequence: O(N log N) via patience sorting ---\n// tails[i] = smallest possible tail of any IS of length i+1\nvector<int> tails;\nfor (int num : nums) {\n    // lower_bound for strictly increasing (use upper_bound for non-decreasing)\n    auto it = lower_bound(tails.begin(), tails.end(), num);\n    if (it == tails.end()) tails.push_back(num); // Extend LIS length\n    else *it = num;                               // Replace: minimize tail value\n}\nint lisLength = tails.size(); // Note: tails is NOT the actual LIS sequence",
@@ -324,7 +324,7 @@
     "category": "DP",
     "difficulty": "Medium"
   },
-  "Knapsack DP": {
+  "Knapsack DP (0/1 vs Unbounded)": {
     "trigger": "Select items to hit an exact target sum, Maximize value under a capacity constraint, Partition a set into equal halves, Coin combinations with or without item reuse",
     "complexity": "Time: O(N * W) | Space: O(W)",
     "code": "// --- 0/1 Knapsack (each item used AT MOST ONCE) ---\n// Iterate weight BACKWARDS to prevent reusing the same item\nvector<int> dp(W + 1, 0);\nfor (auto& [weight, value] : items)\n    for (int w = W; w >= weight; w--)       // <-- BACKWARDS\n        dp[w] = max(dp[w], dp[w - weight] + value);\n\n// --- Unbounded Knapsack (each item can be reused UNLIMITED times) ---\n// Iterate weight FORWARDS to allow reusing the same item\nvector<int> dp(W + 1, 0);\nfor (auto& [weight, value] : items)\n    for (int w = weight; w <= W; w++)       // <-- FORWARDS\n        dp[w] = max(dp[w], dp[w - weight] + value);\n\n// --- Partition Equal Subset Sum (0/1 Knapsack on bool dp) ---\nint total = reduce(nums.begin(), nums.end(), 0);\nif (total % 2 != 0) return false; // Odd sum: impossible\nint target = total / 2;\nvector<bool> dp(target + 1, false);\ndp[0] = true;\nfor (int num : nums)\n    for (int w = target; w >= num; w--)     // <-- BACKWARDS (0/1)\n        dp[w] = dp[w] || dp[w - num];\nreturn dp[target];",
@@ -337,8 +337,8 @@
     "category": "DP",
     "difficulty": "Medium"
   },
-  "Grid DP": {
-    "trigger": "Count or optimize paths across a 2D grid, Minimum cost movement with restricted directional choices",
+  "Grid DP (Unique Paths / Min Cost)": {
+    "trigger": "Count or optimize paths across a 2D grid, Minimum cost movement with restricted directional choices, State requires both row and column to be fully defined, Handle obstacle cells that block movement",
     "complexity": "Time: O(M*N) | Space: O(M*N) reducible to O(N)",
     "code": "int m = grid.size(), n = grid[0].size();\n\n// --- Unique Paths (count all paths from top-left to bottom-right) ---\n// dp[r][c] = number of ways to reach cell (r, c)\nvector<vector<int>> dp(m, vector<int>(n, 1)); // First row & col = 1\nfor (int r = 1; r < m; r++)\n    for (int c = 1; c < n; c++)\n        dp[r][c] = dp[r-1][c] + dp[r][c-1];\nreturn dp[m-1][n-1];\n\n// --- Minimum Path Sum ---\n// dp[r][c] = minimum cost to reach cell (r, c)\nvector<vector<int>> dp(m, vector<int>(n));\ndp[0][0] = grid[0][0];\nfor (int c = 1; c < n; c++) dp[0][c] = dp[0][c-1] + grid[0][c]; // Init first row\nfor (int r = 1; r < m; r++) dp[r][0] = dp[r-1][0] + grid[r][0]; // Init first col\nfor (int r = 1; r < m; r++)\n    for (int c = 1; c < n; c++)\n        dp[r][c] = min(dp[r-1][c], dp[r][c-1]) + grid[r][c];\nreturn dp[m-1][n-1];",
     "gotchas": "Initialize the ENTIRE first row and first column as base cases before the inner loop. For obstacles: set `dp[r][c] = 0` (for count) or `INT_MAX` (for min cost) at obstacle cells. Space can be reduced to O(N) by maintaining a single row array and processing in-place — process row by row, left to right.",
@@ -350,7 +350,7 @@
     "category": "DP",
     "difficulty": "Medium"
   },
-  "String DP": {
+  "String DP (LCS / Edit Distance)": {
     "trigger": "Transform one string into another with minimum operations, Longest Common Subsequence (LCS), Longest palindromic subsequence or substring",
     "complexity": "Time: O(M*N) | Space: O(M*N) reducible to O(N)",
     "code": "// --- Longest Common Subsequence ---\n// dp[i][j] = LCS of s1[0..i-1] and s2[0..j-1]\nint m = s1.size(), n = s2.size();\nvector<vector<int>> dp(m + 1, vector<int>(n + 1, 0));\nfor (int i = 1; i <= m; i++) {\n    for (int j = 1; j <= n; j++) {\n        if (s1[i-1] == s2[j-1]) dp[i][j] = dp[i-1][j-1] + 1;\n        else                     dp[i][j] = max(dp[i-1][j], dp[i][j-1]);\n    }\n}\nreturn dp[m][n];\n\n// --- Edit Distance (Levenshtein) ---\n// dp[i][j] = min operations to transform word1[0..i-1] into word2[0..j-1]\nvector<vector<int>> dp(m + 1, vector<int>(n + 1));\nfor (int i = 0; i <= m; i++) dp[i][0] = i; // Delete all of word1\nfor (int j = 0; j <= n; j++) dp[0][j] = j; // Insert all of word2\nfor (int i = 1; i <= m; i++) {\n    for (int j = 1; j <= n; j++) {\n        if (word1[i-1] == word2[j-1])\n            dp[i][j] = dp[i-1][j-1]; // No operation needed\n        else\n            dp[i][j] = 1 + min({dp[i-1][j],    // Delete from word1\n                                 dp[i][j-1],    // Insert into word1\n                                 dp[i-1][j-1]   // Replace\n                                });\n    }\n}\nreturn dp[m][n];",
@@ -363,10 +363,10 @@
     "category": "DP",
     "difficulty": "Medium"
   },
-  "Interval DP": {
+  "Interval DP (dp[l][r])": {
     "trigger": "Optimal value over all contiguous sub-intervals, Break or merge array segments optimally, Two-player alternating game on a linear structure",
     "complexity": "Time: O(N³) | Space: O(N²)",
-    "code": "// --- Interval DP Template (e.g., Burst Balloons) ---\n// dp[l][r] = optimal value for the subproblem on interval [l, r]\nint n = nums.size();\nvector<vector<int>> dp(n, vector<int>(n, 0));\n\n// CRITICAL: Iterate by LENGTH of interval, not by start index\nfor (int len = 1; len <= n; len++) {\n    for (int l = 0; l + len - 1 < n; l++) {\n        int r = l + len - 1;\n        // Try each position k as the LAST operation performed in [l, r]\n        for (int k = l; k <= r; k++) {\n            int left_val  = (k > l) ? dp[l][k-1] : 0;\n            int right_val = (k < r) ? dp[k+1][r] : 0;\n            dp[l][r] = max(dp[l][r], left_val + score(k) + right_val);\n        }\n    }\n}\nreturn dp[0][n-1];",
+    "code": "// dp[l][r] = optimal value for interval [l, r]\nint n = nums.size();\nvector<vector<int>> dp(n, vector<int>(n, 0));\n\nfor (int len = 1; len <= n; len++) {        // iterate by LENGTH, not start index\n    for (int l = 0; l + len - 1 < n; l++) {\n        int r = l + len - 1;\n        for (int k = l; k <= r; k++) {      // k = LAST operation in [l, r]\n            int lv = (k > l) ? dp[l][k-1] : 0;\n            int rv = (k < r) ? dp[k+1][r] : 0;\n            dp[l][r] = max(dp[l][r], lv + score(k) + rv);\n        }\n    }\n}\nreturn dp[0][n-1];",
     "gotchas": "ALWAYS iterate by LENGTH of interval (outer loop), not by start index. The split point k represents the LAST operation performed — this is the key insight for Burst Balloons. Memoize with `dp[l][r]`. Base cases: `dp[i][i]` for single-element intervals. Adding sentinel values at array boundaries (e.g., nums[-1] = nums[n] = 1 for Burst Balloons) simplifies boundary handling.",
     "problems": [
       "LC 312. Burst Balloons",
@@ -389,7 +389,7 @@
     "category": "DP",
     "difficulty": "Hard"
   },
-  "Bitmask DP": {
+  "Bitmask DP (2^N State)": {
     "trigger": "N <= 20, TSP (Traveling Salesman), Enumerate all subsets/permutations of a small set, State represented as a bitmask",
     "complexity": "Time: O(2^N * N²) | Space: O(2^N * N)",
     "code": "// --- Common Bitmask Operations ---\n// Check if bit i is set:    (mask & (1 << i)) != 0\n// Set bit i:                mask | (1 << i)\n// Clear bit i:              mask & ~(1 << i)\n// Check all N bits set:     mask == (1 << N) - 1\n// Enumerate all subsets:    for (int sub = mask; sub; sub = (sub-1) & mask)\n\n// --- Bitmask DP (TSP / visit all nodes) ---\n// dp[mask][last] = min cost to visit nodes in 'mask', ending at 'last'\nvector<vector<int>> dp(1 << N, vector<int>(N, INT_MAX));\ndp[1 << start][start] = 0;\n\nfor (int mask = 0; mask < (1 << N); mask++) {\n    for (int u = 0; u < N; u++) {\n        if (!(mask & (1 << u))) continue; // u must be in mask\n        if (dp[mask][u] == INT_MAX) continue;\n        for (int v = 0; v < N; v++) {\n            if (mask & (1 << v)) continue; // v must NOT be in mask\n            int next_mask = mask | (1 << v);\n            dp[next_mask][v] = min(dp[next_mask][v], dp[mask][u] + graph[u][v]);\n        }\n    }\n}",
@@ -441,8 +441,8 @@
     "category": "String",
     "difficulty": "Hard"
   },
-  "Segment Tree": {
-    "trigger": "Dynamic range queries (sum/max/min) with frequent point or range updates",
+  "Segment Tree (Range Query)": {
+    "trigger": "Dynamic range queries (sum/max/min) with frequent point or range updates, Need O(log N) per both query AND update (prefix sum cannot update in O(log N)), Range updates with lazy propagation",
     "complexity": "Time: O(log N) per query/update | Space: O(N)",
     "code": "// Allocate 4 * N space for the tree array (safe upper bound)\nconst int INVALID = -1; // Identity element for max queries; use 0 for sum\n\n// --- Build (initialize from array) ---\nvoid build(vector<int>& tree, vector<int>& arr, int node, int start, int end) {\n    if (start == end) { tree[node] = arr[start]; return; }\n    int mid = start + (end - start) / 2;\n    build(tree, arr, 2*node,   start,   mid);\n    build(tree, arr, 2*node+1, mid+1,   end);\n    tree[node] = max(tree[2*node], tree[2*node+1]);\n}\n\n// --- Point Update ---\nvoid update(vector<int>& tree, int node, int start, int end, int idx, int val) {\n    if (start == end) { tree[node] = val; return; }\n    int mid = start + (end - start) / 2;\n    if (idx <= mid) update(tree, 2*node,   start, mid,   idx, val);\n    else            update(tree, 2*node+1, mid+1, end,   idx, val);\n    tree[node] = max(tree[2*node], tree[2*node+1]);\n}\n\n// --- Range Query ---\nint query(vector<int>& tree, int node, int start, int end, int l, int r) {\n    if (r < start || l > end) return INVALID;       // Completely outside\n    if (l <= start && end <= r) return tree[node];   // Completely inside\n    int mid = start + (end - start) / 2;\n    return max(query(tree, 2*node,   start, mid,   l, r),\n               query(tree, 2*node+1, mid+1, end,   l, r));\n}",
     "gotchas": "Always allocate `4 * N` space for the tree array. Left child = `2*node`, right child = `2*node+1` (1-indexed node). The INVALID sentinel must be the identity element for your operation (INVALID=-1 for max, 0 for sum, INT_MAX for min). For range updates, you need an additional `lazy[]` propagation array — significantly more complex.",

@@ -28,3 +28,12 @@ Each flashcard is a self-contained pattern card covering:
 3. Study the **Complexity** and **C++ template**.
 4. Check the **Gotchas** below the code for common mistakes.
 5. Click a **Practice** link to solve a representative problem on LeetCode.
+
+## 📐 Code Template Style Guide
+
+All templates follow a **wide-screen, single-viewport** authoring rule — the goal is to see the complete template without vertical scrolling:
+
+- **Inline comments**: Explanatory notes go at the **end of the relevant line** (`code; // why`), never on a standalone line above.
+- **Horizontal density**: Prefer one longer line over two short ones. Combine related operations on the same line where clarity allows (e.g., `int l = 0, r = n - 1;`).
+- **Section dividers**: Use `// --- Section Name ---` on the line that starts each template variant. One blank line between major sections; none within a section.
+- **Goal**: Every template should be fully visible in a typical widescreen browser viewport without the user reaching for the scroll wheel.
