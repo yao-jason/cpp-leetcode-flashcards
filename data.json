@@ -1,107 +1,482 @@
 {
+  "HashMap Patterns": {
+    "trigger": "Find pairs or complements in O(N), Group elements by a shared key property, Frequency counting, Longest consecutive run",
+    "complexity": "Time: O(N) | Space: O(N)",
+    "code": "// --- Pattern 1: Two Sum — complement lookup ---\nunordered_map<int, int> seen; // value -> index\nfor (int i = 0; i < (int)nums.size(); i++) {\n    int complement = target - nums[i];\n    if (seen.count(complement)) return {seen[complement], i};\n    seen[nums[i]] = i; // Insert AFTER checking to avoid self-pairing\n}\n\n// --- Pattern 2: Group Anagrams — sorted string as key ---\nunordered_map<string, vector<string>> groups;\nfor (const string& s : strs) {\n    string key = s;\n    sort(key.begin(), key.end());\n    groups[key].push_back(s);\n}\n\n// --- Pattern 3: Longest Consecutive Sequence ---\nunordered_set<int> numSet(nums.begin(), nums.end());\nint longest = 0;\nfor (int num : numSet) {\n    if (!numSet.count(num - 1)) {  // Only start from sequence beginning\n        int cur = num, len = 1;\n        while (numSet.count(++cur)) len++;\n        longest = max(longest, len);\n    }\n}",
+    "gotchas": "For Two Sum: insert the current element into the map AFTER checking for its complement — this prevents using the same element twice (e.g., target=6, nums=[3]). Prefer `unordered_map` (O(1) avg) over `map` (O(log N)). For consecutive sequence, start the chain only when `num-1` is absent to avoid O(N²) inner loops.",
+    "problems": [
+      "LC 1. Two Sum",
+      "LC 49. Group Anagrams",
+      "LC 128. Longest Consecutive Sequence"
+    ],
+    "category": "Array",
+    "difficulty": "Easy"
+  },
+  "Prefix Sum": {
+    "trigger": "O(1) range sum after O(N) preprocessing, Count subarrays summing to a target, Cumulative property queries over arbitrary ranges",
+    "complexity": "Time: O(N) build, O(1) query | Space: O(N)",
+    "code": "// --- 1D Prefix Sum ---\nint n = nums.size();\nvector<int> prefix(n + 1, 0); // prefix[0] = 0 (empty prefix)\nfor (int i = 0; i < n; i++)\n    prefix[i + 1] = prefix[i] + nums[i];\n\n// Range sum of nums[l..r] (0-indexed, inclusive)\nint rangeSum = prefix[r + 1] - prefix[l];\n\n// --- Prefix Sum + HashMap (Subarray Sum = K) ---\n// Count subarrays where sum == k\nunordered_map<int, int> freq;\nfreq[0] = 1;  // Base case: a subarray starting at index 0\nint count = 0, running_sum = 0;\n\nfor (int num : nums) {\n    running_sum += num;\n    // If (running_sum - k) was seen before, those prefixes form valid subarrays\n    count += freq[running_sum - k];\n    freq[running_sum]++;\n}",
+    "gotchas": "Use 1-indexed prefix array: `prefix[i]` = sum of first i elements, so `prefix[0] = 0`. Range sum [l, r] = `prefix[r+1] - prefix[l]`. For the hashmap variant, ALWAYS initialize `freq[0] = 1` before the loop to correctly count subarrays that start at index 0. For negative numbers, `unordered_map` still works correctly.",
+    "problems": [
+      "LC 303. Range Sum Query - Immutable",
+      "LC 560. Subarray Sum Equals K",
+      "LC 238. Product of Array Except Self"
+    ],
+    "category": "Array",
+    "difficulty": "Easy"
+  },
   "Two Pointers": {
-    "trigger": "Pairs summing to target in sorted array (3Sum), Container With Most Water, Palindrome check",
+    "trigger": "Pairs summing to target in a sorted array, Palindrome check, Remove duplicates in-place, Maximize the span between two boundaries",
     "complexity": "Time: O(N) | Space: O(1)",
-    "code": "int l = 0, r = nums.size() - 1;\nwhile (l < r) {\n    int sum = nums[l] + nums[r];\n    if (sum == target) return {l, r};\n    else if (sum < target) l++;\n    else r--;\n}"
+    "code": "int l = 0, r = nums.size() - 1;\nwhile (l < r) {\n    int sum = nums[l] + nums[r];\n    if (sum == target) return {l, r};\n    else if (sum < target) l++;\n    else r--;\n}\n\n// --- 3Sum (sort first, then fix one pointer) ---\nsort(nums.begin(), nums.end());\nfor (int i = 0; i < nums.size() - 2; i++) {\n    if (i > 0 && nums[i] == nums[i-1]) continue; // Skip duplicates for i\n    int l = i + 1, r = nums.size() - 1;\n    while (l < r) {\n        int sum = nums[i] + nums[l] + nums[r];\n        if (sum == 0) {\n            result.push_back({nums[i], nums[l], nums[r]});\n            while (l < r && nums[l] == nums[l+1]) l++; // Skip duplicates\n            while (l < r && nums[r] == nums[r-1]) r--;\n            l++; r--;\n        } else if (sum < 0) l++;\n        else r--;\n    }\n}",
+    "gotchas": "Array MUST be sorted before applying two pointers. For 3Sum, after fixing index i, always skip duplicate values with `if (i > 0 && nums[i] == nums[i-1]) continue;`. Also skip duplicates for l and r after finding a valid triplet to avoid duplicate results.",
+    "problems": [
+      "LC 167. Two Sum II - Input Array Is Sorted",
+      "LC 15. 3Sum",
+      "LC 11. Container With Most Water"
+    ],
+    "category": "Array",
+    "difficulty": "Medium"
   },
   "Sliding Window": {
-    "trigger": "Longest/Shortest Subarray or Substring matching a condition, At most K distinct elements",
+    "trigger": "Longest/Shortest subarray or substring matching a condition, At most K distinct elements, Minimum window containing all characters",
     "complexity": "Time: O(N) | Space: O(1) or O(K)",
-    "code": "int l = 0, best = 0;\nfor (int r = 0; r < n; r++) {\n    // 1. Add nums[r] to the current window state\n    state.add(nums[r]);\n    \n    // 2. Shrink the window from the left until it becomes valid again\n    while (invalid(state)) {\n        state.remove(nums[l]);\n        l++;\n    }\n    \n    // 3. Update the global optimum when the window is valid\n    best = max(best, r - l + 1);\n}"
+    "code": "int l = 0, best = 0;\nfor (int r = 0; r < n; r++) {\n    // 1. Expand: add nums[r] to the current window state\n    state.add(nums[r]);\n\n    // 2. Shrink: contract from left until window is valid again\n    while (invalid(state)) {\n        state.remove(nums[l]);\n        l++;\n    }\n\n    // 3. Update global optimum (window is now valid)\n    best = max(best, r - l + 1);\n}\n\n// --- Fixed-size window variant ---\nfor (int r = 0; r < n; r++) {\n    state.add(nums[r]);\n    if (r >= k) state.remove(nums[r - k]); // Evict element leaving window\n    if (r >= k - 1) best = max(best, state.value());\n}",
+    "gotchas": "Track what makes a window 'invalid' carefully — the shrink condition is the key insight. For character problems, use `unordered_map<char,int>` or `int freq[26]` as state. Always update state incrementally (never rescan). For minimum-window problems, shrink when valid (not when invalid).",
+    "problems": [
+      "LC 3. Longest Substring Without Repeating Characters",
+      "LC 76. Minimum Window Substring",
+      "LC 424. Longest Repeating Character Replacement"
+    ],
+    "category": "Array",
+    "difficulty": "Medium"
   },
-  "Binary Search": {
-    "trigger": "Maximize minimum, minimize maximum, searching in a monotonic answer space (Leftmost / Rightmost)",
+  "Binary Search (Sorted Array)": {
+    "trigger": "Search for a target in a sorted array, Find leftmost/rightmost occurrence via lower_bound / upper_bound, Search through a rotation break in a sorted sequence",
+    "complexity": "Time: O(log N) | Space: O(1)",
+    "code": "// --- std::lower_bound / upper_bound (prefer STL) ---\n// lower_bound: iterator to first element >= target\n// upper_bound: iterator to first element > target\nauto it = lower_bound(v.begin(), v.end(), target);\nif (it != v.end() && *it == target) { /* found at index: it - v.begin() */ }\n\n// --- Manual: Exact match (l <= r, return -1 if not found) ---\nint l = 0, r = nums.size() - 1;\nwhile (l <= r) {\n    int mid = l + (r - l) / 2;\n    if      (nums[mid] == target) return mid;\n    else if (nums[mid] < target)  l = mid + 1;\n    else                          r = mid - 1;\n}\nreturn -1;\n\n// --- Rotated Sorted Array (no duplicates) ---\nint l = 0, r = nums.size() - 1;\nwhile (l <= r) {\n    int mid = l + (r - l) / 2;\n    if (nums[mid] == target) return mid;\n\n    if (nums[l] <= nums[mid]) {               // Left half is sorted\n        if (nums[l] <= target && target < nums[mid]) r = mid - 1;\n        else l = mid + 1;\n    } else {                                   // Right half is sorted\n        if (nums[mid] < target && target <= nums[r]) l = mid + 1;\n        else r = mid - 1;\n    }\n}\nreturn -1;",
+    "gotchas": "`lower_bound` returns the first element >= target, NOT necessarily == target. Always check `*it == target`. For rotated arrays, first determine which half is sorted (compare nums[l] with nums[mid]), then check if target lies in that sorted half. Use `l <= r` (not `l < r`) for exact-match binary search.",
+    "problems": [
+      "LC 704. Binary Search",
+      "LC 34. Find First and Last Position of Element in Sorted Array",
+      "LC 33. Search in Rotated Sorted Array"
+    ],
+    "category": "Array",
+    "difficulty": "Medium"
+  },
+  "Binary Search (Answer Space)": {
+    "trigger": "Maximize the minimum, Minimize the maximum, Feasibility check over a monotonic answer space (e.g., 'Can we achieve X?'). Use when searching ON VALUES, not indices.",
     "complexity": "Time: O(N log(Max - Min)) | Space: O(1)",
-    "code": "int l = min_val, r = max_val;\nwhile (l < r) {\n    // Seeking leftmost boundary (Minimum valid value)\n    // Use standard mid: does NOT need rounding up\n    int mid = l + (r - l) / 2;\n    if (isValid(mid)) r = mid;\n    else l = mid + 1;\n\n    /*\n    // Seeking rightmost boundary (Maximum valid value)\n    // Update logic is l = mid, so mid MUST be rounded up to prevent infinite loop\n    int mid = l + (r - l + 1) / 2;\n    if (isValid(mid)) l = mid;\n    else r = mid - 1;\n    */\n}\nreturn l; // l == r at the end"
+    "code": "int l = min_val, r = max_val;\nwhile (l < r) {\n    // --- Seeking LEFTMOST boundary (Minimum valid value) ---\n    // Standard mid, does NOT need rounding up\n    int mid = l + (r - l) / 2;\n    if (isValid(mid)) r = mid;   // mid could be the answer, narrow right\n    else l = mid + 1;            // mid is too small, search right\n\n    /*\n    // --- Seeking RIGHTMOST boundary (Maximum valid value) ---\n    // l = mid, so mid MUST be rounded UP to prevent infinite loop\n    int mid = l + (r - l + 1) / 2;\n    if (isValid(mid)) l = mid;   // mid could be the answer, narrow left\n    else r = mid - 1;            // mid is too large, search left\n    */\n}\nreturn l; // l == r is the answer",
+    "gotchas": "INFINITE LOOP risk: when seeking the rightmost boundary, if you use `l = mid` without rounding up mid, then `mid = l` when l+1==r, causing an infinite loop. Always use `mid = l + (r-l+1)/2` for the rightmost pattern. Verify: does `isValid` monotonically transition false→true or true→false?",
+    "problems": [
+      "LC 875. Koko Eating Bananas",
+      "LC 410. Split Array Largest Sum",
+      "LC 1011. Capacity To Ship Packages Within D Days"
+    ],
+    "category": "Array",
+    "difficulty": "Medium"
   },
-  "Greedy": {
-    "trigger": "Interval Scheduling, Minimum jumps, Maximizing/Minimizing without exhaustive search. (Use ONLY when local optimum guarantees global optimum)",
-    "complexity": "Time: O(N log N) usually due to sorting | Space: O(1)",
-    "code": "// There is no universal code for Greedy, but the core pattern is always:\n// 1. Sort the input based on a specific heuristic (e.g., end time for intervals)\n// 2. Iterate and pick the locally optimal choice\n\nsort(intervals.begin(), intervals.end(), [](const vector<int>& a, const vector<int>& b) {\n    return a[1] < b[1]; // Sort by end time\n});\n\nint count = 0, current_end = INT_MIN;\nfor (const vector<int>& interval : intervals) {\n    if (interval[0] >= current_end) {\n        // No overlap, pick this one\n        count++;\n        current_end = interval[1];\n    }\n}"
-  },
-  "Linked List": {
-    "trigger": "Reverse in place, Find middle node, Cycle detection (Floyd's Tortoise and Hare)",
-    "complexity": "Time: O(N) | Space: O(1)",
-    "code": "// --- Reverse Linked List ---\nListNode* prev = nullptr;\nListNode* curr = head;\nwhile (curr != nullptr) {\n    ListNode* next_temp = curr->next;\n    curr->next = prev;\n    prev = curr;\n    curr = next_temp;\n}\n// Return 'prev' as the new head\n\n// --- Fast & Slow Pointers ---\nListNode *slow = head, *fast = head;\nwhile (fast != nullptr && fast->next != nullptr) {\n    slow = slow->next;\n    fast = fast->next->next;\n    if (slow == fast) break; // Cycle detected\n}"
-  },
-  "Monotonic Stack": {
-    "trigger": "Find Next Greater/Smaller Element, Largest Rectangle in Histogram, Trapping Rain Water",
-    "complexity": "Time: O(N) | Space: O(N)",
-    "code": "stack<int> st;\nfor (int i = 0; i < n; i++) {\n    // Decide if strictly greater or inclusive equal based on the problem\n    // Prefer storing indices over values to easily calculate distances\n    while (!st.empty() && nums[st.top()] < nums[i]) {\n        int prev_idx = st.top();\n        st.pop();\n        // Handle the popped element logic here\n    }\n    st.push(i);\n}"
-  },
-  "Priority Queue (Heap)": {
-    "trigger": "Top K elements, Kth largest/smallest, Median from data stream, Merge K sorted lists",
-    "complexity": "Time: O(N log K) | Space: O(K)",
-    "code": "// 1. Min-Heap Declaration\npriority_queue<int, vector<int>, greater<>> minHeap;\n\n// 2. Custom Comparator (Struct method)\nstruct Compare {\n    bool operator()(const vector<int>& a, const vector<int>& b) {\n        // Return true if 'a' has LOWER priority than 'b' (will be placed below 'b')\n        return a[0] > b[0]; \n    }\n};\npriority_queue<vector<int>, vector<vector<int>>, Compare> pq;\n\n// 3. Top K Pattern Maintenance\nfor (int num : nums) {\n    pq.push(num);\n    if (pq.size() > k) pq.pop();\n}"
-  },
-  "Quick Select (nth_element)": {
-    "trigger": "Kth largest/smallest in an unsorted static array, Top K elements (no stream), Median finding",
-    "complexity": "Time: O(N) average, O(N^2) worst | Space: O(1)",
-    "code": "// --- Approach 1: Using STL (Highly recommended) ---\n// Find the Kth LARGEST element in-place (k is 1-indexed, but iterators are 0-indexed)\nint k = 2;\nstd::nth_element(nums.begin(), nums.begin() + k - 1, nums.end(), greater<int>());\nreturn nums[k - 1];\n\n// --- Approach 2: Iterative Quick Select (3-Way Dutch National Flag) ---\nint left = 0, right = nums.size() - 1, targetIndex = k - 1;\nwhile (left <= right) {\n    if (left == right) return nums[left];\n    int pivotValue = nums[left + rand() % (right - left + 1)]; // random pivot\n    int greaterBound = left, smallerBound = right;\n    for (int i = left; i <= smallerBound;) {\n        if      (nums[i] > pivotValue) { swap(nums[greaterBound++], nums[i++]); } // > pv: front\n        else if (nums[i] < pivotValue) { swap(nums[i], nums[smallerBound--]); }   // < pv: back\n        else                           { i++; }                                   // ==pv: skip\n    }\n    // [left,greaterBound-1] > pv | [greaterBound,smallerBound] == pv | [smallerBound+1,right] < pv\n    if      (targetIndex < greaterBound) right = greaterBound - 1;\n    else if (targetIndex > smallerBound) left  = smallerBound + 1;\n    else                                 return pivotValue;\n}\nreturn -1;"
+  "Monotonic Deque": {
+    "trigger": "Maximum or minimum in every sliding window of size K, Subarray with constraint on range (max - min)",
+    "complexity": "Time: O(N) | Space: O(K)",
+    "code": "// --- Sliding Window Maximum (LC 239) ---\n// deque stores INDICES; front is always the index of the max in current window\ndeque<int> dq;\nvector<int> result;\n\nfor (int i = 0; i < (int)nums.size(); i++) {\n    // 1. Remove indices that have fallen outside the current window\n    while (!dq.empty() && dq.front() < i - k + 1)\n        dq.pop_front();\n\n    // 2. Remove indices from the back whose values are <= nums[i]\n    //    (they can never be the max of any future window)\n    while (!dq.empty() && nums[dq.back()] <= nums[i])\n        dq.pop_back();\n\n    dq.push_back(i);\n\n    // 3. Window is fully formed: record the max (front of deque)\n    if (i >= k - 1)\n        result.push_back(nums[dq.front()]);\n}\nreturn result;",
+    "gotchas": "Store INDICES in the deque, not values — needed to check if front is outside the window. Step order matters: (1) remove expired front, (2) remove smaller back, (3) push current, (4) record result. Use `<=` when removing from back for max-deque to handle duplicates correctly.",
+    "problems": [
+      "LC 239. Sliding Window Maximum",
+      "LC 862. Shortest Subarray with Sum at Least K",
+      "LC 1438. Longest Continuous Subarray With Absolute Diff Less Than or Equal to Limit"
+    ],
+    "category": "Array",
+    "difficulty": "Medium"
   },
   "Sweep Line (Intervals)": {
-    "trigger": "Overlapping intervals, Meeting Rooms, Maximum concurrent events, Skyline problem",
+    "trigger": "Count maximum concurrent overlapping intervals, Merge adjacent or overlapping ranges, Track active events across a continuous timeline",
     "complexity": "Time: O(N log N) | Space: O(N)",
-    "code": "// std::map automatically sorts keys (times) in ascending order\nmap<int, int> events;\nfor (const vector<int>& interval : intervals) {\n    // Be careful with [start, end] inclusiveness.\n    // If [1, 2] and [2, 3] overlap, use interval[1] + 1 for the end event\n    events[interval[0]]++;\n    events[interval[1]]--; \n}\n\nint current_active = 0, max_active = 0;\nfor (const auto& [time, count] : events) {\n    current_active += count;\n    max_active = max(max_active, current_active);\n}\nreturn max_active;"
+    "code": "// std::map automatically sorts keys (times) in ascending order\nmap<int, int> events;\nfor (const vector<int>& interval : intervals) {\n    // If [1, 2] and [2, 3] should NOT overlap: use interval[1] + 1\n    events[interval[0]]++;   // +1 at start: one more event begins\n    events[interval[1]]--;   // -1 at end:   one event ends\n}\n\nint current_active = 0, max_active = 0;\nfor (const auto& [time, delta] : events) {\n    current_active += delta;\n    max_active = max(max_active, current_active);\n}",
+    "gotchas": "Be careful about boundary inclusiveness: if [1,2] and [2,3] overlap (closed intervals), decrement at `interval[1]+1`. If open intervals don't overlap, decrement at `interval[1]`. Use `map<int,int>` (sorted by key), NOT `unordered_map`.",
+    "problems": [
+      "LC 253. Meeting Rooms II",
+      "LC 56. Merge Intervals",
+      "LC 57. Insert Interval"
+    ],
+    "category": "Array",
+    "difficulty": "Medium"
   },
-  "Tree: BFS / DFS Traversal": {
-    "trigger": "Level order traversal, Lowest Common Ancestor, Tree depth/diameter, Path sum",
-    "complexity": "Time: O(N) | Space: O(H) for DFS, O(N) for BFS",
-    "code": "// --- DFS (Bottom-Up State Passing) ---\nint dfs(TreeNode* root) {\n    if (!root) return 0;\n    int left = dfs(root->left);\n    int right = dfs(root->right);\n    // Process state\n    return max(left, right) + 1;\n}\n\n// --- BFS (Level Order) ---\nqueue<TreeNode*> q;\nq.push(root);\nwhile (!q.empty()) {\n    int size = q.size();\n    for (int i = 0; i < size; i++) {\n        TreeNode* node = q.front();\n        q.pop();\n        if (node->left) q.push(node->left);\n        if (node->right) q.push(node->right);\n    }\n}"
+  "Quick Select (nth_element)": {
+    "trigger": "Kth largest or smallest element in an unsorted static array, Find top-K elements without a full sort, Median of a static collection",
+    "complexity": "Time: O(N) average, O(N²) worst | Space: O(1)",
+    "code": "// --- Approach 1: STL nth_element (Highly recommended) ---\n// Find the Kth LARGEST element (k is 1-indexed)\nint k = 2;\nstd::nth_element(nums.begin(), nums.begin() + k - 1, nums.end(), greater<int>());\nreturn nums[k - 1];\n\n// --- Approach 2: Iterative Quick Select (3-Way Dutch National Flag) ---\nint left = 0, right = nums.size() - 1, targetIdx = k - 1;\nwhile (left <= right) {\n    if (left == right) return nums[left];\n    int pivotVal = nums[left + rand() % (right - left + 1)]; // Random pivot!\n    int hi = left, lo = right;\n    for (int i = left; i <= lo;) {\n        if      (nums[i] > pivotVal) swap(nums[hi++], nums[i++]); // > pv: front\n        else if (nums[i] < pivotVal) swap(nums[i], nums[lo--]);   // < pv: back\n        else                         i++;                          // == pv: skip\n    }\n    // [left, hi-1] > pv | [hi, lo] == pv | [lo+1, right] < pv (for Kth largest)\n    if      (targetIdx < hi) right = hi - 1;\n    else if (targetIdx > lo) left  = lo + 1;\n    else                     return pivotVal;\n}",
+    "gotchas": "ALWAYS use a RANDOM pivot to prevent O(N²) worst case on sorted/adversarial inputs. Use Quick Select for static arrays; use a heap for streaming data. The 3-way partition handles arrays with many duplicates efficiently and avoids TLE.",
+    "problems": [
+      "LC 215. Kth Largest Element in an Array",
+      "LC 973. K Closest Points to Origin",
+      "LC 347. Top K Frequent Elements"
+    ],
+    "category": "Array",
+    "difficulty": "Hard"
+  },
+  "Monotonic Stack": {
+    "trigger": "Next greater or smaller element at each index, Maximum area enclosed within a bounded histogram, Volume of water trapped between elevation walls",
+    "complexity": "Time: O(N) | Space: O(N)",
+    "code": "// Store INDICES in the stack (not values) to compute distances\nstack<int> st; // Decreasing stack: top is smallest -> finds Next Greater\n\nfor (int i = 0; i < n; i++) {\n    // Pop while current element is greater than stack top\n    // (adjust condition for increasing stack / next smaller element)\n    while (!st.empty() && nums[st.top()] < nums[i]) {\n        int prev_idx = st.top();\n        st.pop();\n        // Process: nums[i] is the Next Greater Element for nums[prev_idx]\n        // Distance to next greater: i - prev_idx\n        result[prev_idx] = i - prev_idx;\n    }\n    st.push(i);\n}\n// Remaining elements in stack have no next greater element",
+    "gotchas": "Store INDICES (not values) — you almost always need to compute distances. Decide stack type: Decreasing stack (top=smallest) → 'Next Greater Element'; Increasing stack (top=largest) → 'Next Smaller Element'. After the loop, elements still in the stack have no next greater/smaller element.",
+    "problems": [
+      "LC 739. Daily Temperatures",
+      "LC 84. Largest Rectangle in Histogram",
+      "LC 42. Trapping Rain Water"
+    ],
+    "category": "Stack",
+    "difficulty": "Medium"
+  },
+  "Expression Parsing": {
+    "trigger": "Validate bracket or parenthesis matching, Evaluate expressions with nested parentheses and operators, Decode nested encoded sequences",
+    "complexity": "Time: O(N) | Space: O(N)",
+    "code": "// --- Valid Parentheses ---\nstack<char> st;\nfor (char c : s) {\n    if (c == '(' || c == '[' || c == '{') st.push(c);\n    else {\n        if (st.empty()) return false;\n        if (c == ')' && st.top() != '(') return false;\n        if (c == ']' && st.top() != '[') return false;\n        if (c == '}' && st.top() != '{') return false;\n        st.pop();\n    }\n}\nreturn st.empty();\n\n// --- Basic Calculator (handles +, -, parentheses) ---\nstack<int> stk; // Stores sign & result when entering '('\nint result = 0, num = 0, sign = 1;\nfor (char c : s) {\n    if (isdigit(c)) {\n        num = num * 10 + (c - '0'); // Multi-digit number accumulation\n    } else if (c == '+' || c == '-') {\n        result += sign * num; num = 0;\n        sign = (c == '+') ? 1 : -1;\n    } else if (c == '(') {\n        stk.push(result); stk.push(sign); // Save state\n        result = 0; sign = 1;\n    } else if (c == ')') {\n        result += sign * num; num = 0;\n        result *= stk.top(); stk.pop();   // Restore sign before '('\n        result += stk.top(); stk.pop();   // Restore result before '('\n    }\n}\nreturn result + sign * num;",
+    "gotchas": "For multi-digit numbers, accumulate with `num = num * 10 + (c - '0')` — don't process each digit independently. When encountering '(', push the CURRENT result and sign onto the stack, then reset. When encountering ')', flush the current number first before restoring. Always check `!st.empty()` before popping.",
+    "problems": [
+      "LC 20. Valid Parentheses",
+      "LC 224. Basic Calculator",
+      "LC 394. Decode String"
+    ],
+    "category": "Stack",
+    "difficulty": "Medium"
+  },
+  "Priority Queue (Heap)": {
+    "trigger": "Maintain the top-K elements dynamically, Kth largest or smallest from a data stream, Running median, Merge multiple sorted sequences",
+    "complexity": "Time: O(N log K) | Space: O(K)",
+    "code": "// 1. Min-Heap Declaration (smallest element at top)\npriority_queue<int, vector<int>, greater<>> minHeap;\n\n// 2. Custom Comparator (struct method)\nstruct Compare {\n    bool operator()(const vector<int>& a, const vector<int>& b) {\n        // Return true if 'a' has LOWER priority than 'b'\n        return a[0] > b[0]; // Min-heap by first element\n    }\n};\npriority_queue<vector<int>, vector<vector<int>>, Compare> pq;\n\n// 3. Top K Largest — maintain a min-heap of size K\n// When heap exceeds K, pop the smallest -> only K largest remain\nfor (int num : nums) {\n    pq.push(num);\n    if ((int)pq.size() > k) pq.pop();\n}\n// pq.top() is the Kth largest element",
+    "gotchas": "C++ max-heap is default; for min-heap use `greater<>` as the third template argument. In a custom comparator struct, `return a > b` means 'a has lower priority' (min-heap behavior). For Top K Largest: use a MIN-heap of size K and pop when oversized — the top is the Kth largest. Don't confuse with 'Top K Smallest' (use max-heap).",
+    "problems": [
+      "LC 215. Kth Largest Element in an Array",
+      "LC 347. Top K Frequent Elements",
+      "LC 295. Find Median from Data Stream"
+    ],
+    "category": "Heap",
+    "difficulty": "Medium"
+  },
+  "Linked List": {
+    "trigger": "Reverse a linked list in-place, Find the middle node with fast/slow pointers, Detect and locate a cycle (Floyd's algorithm)",
+    "complexity": "Time: O(N) | Space: O(1)",
+    "code": "// --- Reverse Linked List (iterative) ---\nListNode* prev = nullptr;\nListNode* curr = head;\nwhile (curr != nullptr) {\n    ListNode* next_temp = curr->next; // Save before overwriting\n    curr->next = prev;\n    prev = curr;\n    curr = next_temp;\n}\n// prev is the new head\n\n// --- Fast & Slow Pointers ---\nListNode *slow = head, *fast = head;\nwhile (fast != nullptr && fast->next != nullptr) {\n    slow = slow->next;\n    fast = fast->next->next;\n    if (slow == fast) break; // Cycle detected\n}\n// slow is at the middle (for even-length: second of two middles)\n\n// --- Find cycle start (after detecting cycle above) ---\nListNode* ptr = head;\nwhile (ptr != slow) { // Reset one pointer to head; advance both by 1\n    ptr = ptr->next;\n    slow = slow->next;\n}\n// ptr == slow == cycle start node",
+    "gotchas": "ALWAYS save `curr->next` before overwriting `curr->next = prev` in reversal. For cycle start detection: after fast and slow meet inside the cycle, reset ONE pointer to head and advance BOTH one step at a time — they meet exactly at the cycle start. For finding the middle, slow stops at the first middle node for odd-length lists.",
+    "problems": [
+      "LC 206. Reverse Linked List",
+      "LC 141. Linked List Cycle",
+      "LC 142. Linked List Cycle II"
+    ],
+    "category": "Linked List",
+    "difficulty": "Medium"
+  },
+  "BFS / DFS Traversal": {
+    "trigger": "Level-by-level traversal, Lowest Common Ancestor (LCA), Tree height and diameter, Root-to-leaf path conditions",
+    "complexity": "Time: O(N) | Space: O(H) DFS, O(N) BFS",
+    "code": "// --- DFS: Bottom-Up (compute and return state from children) ---\nint dfs(TreeNode* root) {\n    if (!root) return 0; // Base case\n    int left  = dfs(root->left);\n    int right = dfs(root->right);\n    // Process: use left and right subtree results\n    diameter = max(diameter, left + right); // e.g., for tree diameter\n    return max(left, right) + 1;\n}\n\n// --- LCA (Lowest Common Ancestor) ---\nTreeNode* lca(TreeNode* root, TreeNode* p, TreeNode* q) {\n    if (!root || root == p || root == q) return root;\n    TreeNode* left  = lca(root->left, p, q);\n    TreeNode* right = lca(root->right, p, q);\n    if (left && right) return root; // p and q in different subtrees\n    return left ? left : right;\n}\n\n// --- BFS: Level Order ---\nqueue<TreeNode*> q;\nif (root) q.push(root);\nwhile (!q.empty()) {\n    int size = q.size(); // Snapshot size BEFORE processing this level\n    for (int i = 0; i < size; i++) {\n        TreeNode* node = q.front(); q.pop();\n        if (node->left)  q.push(node->left);\n        if (node->right) q.push(node->right);\n    }\n}",
+    "gotchas": "For BFS level order: snapshot `q.size()` at the START of each level loop — the size changes as you enqueue children. For DFS, always handle the `nullptr` base case. For LCA: if BOTH left and right return non-null, current root IS the LCA.",
+    "problems": [
+      "LC 102. Binary Tree Level Order Traversal",
+      "LC 104. Maximum Depth of Binary Tree",
+      "LC 236. Lowest Common Ancestor of a Binary Tree"
+    ],
+    "category": "Tree",
+    "difficulty": "Medium"
   },
   "Trie (Prefix Tree)": {
-    "trigger": "Prefix matching, Autocomplete, Word Search II, Maximum XOR of Two Numbers",
-    "complexity": "Time: O(L) per word | Space: O(N * L * 26)",
-    "code": "struct TrieNode {\n    TrieNode* next[26] = {NULL};\n    bool isEnd = false;\n    \n    // Prevent memory leaks in C++ interviews\n    ~TrieNode() {\n        for (TrieNode* node : next) {\n            if (node != NULL) delete node;\n        }\n    }\n};\n\nvoid insert(TrieNode* root, string& word) {\n    TrieNode* node = root;\n    for (char c : word) {\n        if (node->next[c - 'a'] == NULL) node->next[c - 'a'] = new TrieNode();\n        node = node->next[c - 'a'];\n    }\n    node->isEnd = true;\n}"
+    "trigger": "Fast prefix matching and autocomplete, Simultaneous multi-word search in a grid, Bitwise XOR maximization over a set",
+    "complexity": "Time: O(L) per operation | Space: O(N * L * 26)",
+    "code": "struct TrieNode {\n    TrieNode* next[26] = {NULL};\n    bool isEnd = false;\n    ~TrieNode() { // Destructor prevents memory leaks\n        for (TrieNode* node : next)\n            if (node != NULL) delete node;\n    }\n};\n\nvoid insert(TrieNode* root, const string& word) {\n    TrieNode* node = root;\n    for (char c : word) {\n        if (node->next[c - 'a'] == NULL)\n            node->next[c - 'a'] = new TrieNode();\n        node = node->next[c - 'a'];\n    }\n    node->isEnd = true;\n}\n\n// Exact word match: path must exist AND isEnd must be true\nbool search(TrieNode* root, const string& word) {\n    TrieNode* node = root;\n    for (char c : word) {\n        if (node->next[c - 'a'] == NULL) return false;\n        node = node->next[c - 'a'];\n    }\n    return node->isEnd; // Key difference from startsWith\n}\n\n// Prefix match: path must exist, isEnd NOT required\nbool startsWith(TrieNode* root, const string& prefix) {\n    TrieNode* node = root;\n    for (char c : prefix) {\n        if (node->next[c - 'a'] == NULL) return false;\n        node = node->next[c - 'a'];\n    }\n    return true;\n}",
+    "gotchas": "`search()` requires `isEnd == true`; `startsWith()` does NOT. Raw pointer Trie MUST have a destructor to avoid memory leaks. For Word Search II, store the matched word string inside the TrieNode to avoid re-tracing the path. Consider using `unordered_map<char, TrieNode*>` for sparse alphabets.",
+    "problems": [
+      "LC 208. Implement Trie (Prefix Tree)",
+      "LC 211. Design Add and Search Words Data Structure",
+      "LC 212. Word Search II"
+    ],
+    "category": "Tree",
+    "difficulty": "Medium"
+  },
+  "Serialize & Construct": {
+    "trigger": "Serialize and reconstruct a binary tree using null markers, Rebuild a tree from two complementary traversal sequences",
+    "complexity": "Time: O(N) | Space: O(N)",
+    "code": "// --- Serialize: Preorder with '#' as null markers ---\nstring serialize(TreeNode* root) {\n    if (!root) return \"#,\";\n    return to_string(root->val) + \",\" + serialize(root->left) + serialize(root->right);\n}\n\n// --- Deserialize: Preorder reconstruction ---\nTreeNode* deserializeHelper(istringstream& ss) {\n    string val;\n    getline(ss, val, ',');\n    if (val == \"#\") return nullptr;\n    TreeNode* node = new TreeNode(stoi(val));\n    node->left  = deserializeHelper(ss);\n    node->right = deserializeHelper(ss);\n    return node;\n}\nTreeNode* deserialize(string data) {\n    istringstream ss(data);\n    return deserializeHelper(ss);\n}\n\n// --- Construct from Preorder + Inorder (use a hashmap for O(N)) ---\nunordered_map<int, int> inorderIdx;\nTreeNode* build(vector<int>& pre, int preL,\n                vector<int>& in,  int inL, int inR) {\n    if (inL > inR) return nullptr;\n    TreeNode* root = new TreeNode(pre[preL]);\n    int mid = inorderIdx[pre[preL]]; // O(1) lookup\n    int leftSize = mid - inL;\n    root->left  = build(pre, preL + 1,            in, inL,       mid - 1);\n    root->right = build(pre, preL + 1 + leftSize, in, mid + 1,   inR);\n    return root;\n}",
+    "gotchas": "Preorder alone CANNOT reconstruct a tree — you need either inorder OR null markers. With null markers, preorder is sufficient. For construction from preorder+inorder: preorder[0] is always the root; its position in inorder splits left/right subtrees. Use a hashmap for O(1) inorder lookup, avoiding O(N²) complexity.",
+    "problems": [
+      "LC 297. Serialize and Deserialize Binary Tree",
+      "LC 105. Construct Binary Tree from Preorder and Inorder Traversal",
+      "LC 106. Construct Binary Tree from Inorder and Postorder Traversal"
+    ],
+    "category": "Tree",
+    "difficulty": "Hard"
   },
   "Backtracking": {
-    "trigger": "Permutations, Combinations, Subsets, N-Queens, Exhaustive search with constraints",
-    "complexity": "Time: O(N!) or O(2^N) | Space: O(N)",
-    "code": "void backtrack(vector<int>& candidates, vector<int>& current, int target, int start) {\n    if (target == 0) {\n        result.push_back(current);\n        return;\n    }\n    \n    for (int i = start; i < candidates.size(); i++) {\n        // Pruning: skip invalid states to save time\n        if (target < candidates[i]) break;\n        // Avoid duplicate combinations if elements are not unique\n        if (i > start && candidates[i] == candidates[i - 1]) continue;\n        \n        current.push_back(candidates[i]);\n        // Pass i instead of i+1 if elements can be reused\n        backtrack(candidates, current, target - candidates[i], i + 1);\n        current.pop_back();\n    }\n}"
+    "trigger": "Generate all permutations, combinations, or subsets, Constraint-satisfying exhaustive search (e.g., N-Queens), Explore all valid configurations with pruning",
+    "complexity": "Time: O(N!) permutations, O(2^N) subsets | Space: O(N)",
+    "code": "// --- Combination Template (sorted input, avoid duplicates) ---\nvoid backtrack_comb(vector<int>& candidates, vector<int>& cur, int target, int start) {\n    if (target == 0) { result.push_back(cur); return; }\n    for (int i = start; i < (int)candidates.size(); i++) {\n        if (candidates[i] > target) break;              // Pruning\n        if (i > start && candidates[i] == candidates[i-1]) continue; // Skip duplicates\n        cur.push_back(candidates[i]);\n        backtrack_comb(candidates, cur, target - candidates[i], i + 1); // i+1: no reuse\n        cur.pop_back();\n    }\n}\n\n// --- Permutation Template (sort first if duplicates possible) ---\nvoid backtrack_perm(vector<int>& nums, vector<int>& cur, vector<bool>& visited) {\n    if ((int)cur.size() == (int)nums.size()) { result.push_back(cur); return; }\n    for (int i = 0; i < (int)nums.size(); i++) {\n        if (visited[i]) continue;\n        // Skip: same value AND previous (same value) was NOT used in this path\n        if (i > 0 && nums[i] == nums[i-1] && !visited[i-1]) continue;\n        visited[i] = true;\n        cur.push_back(nums[i]);\n        backtrack_perm(nums, cur, visited);\n        cur.pop_back();\n        visited[i] = false;\n    }\n}",
+    "gotchas": "Two distinct patterns: (1) Combinations use a `start` index to prevent revisiting. (2) Permutations use a `visited[]` array (all positions are candidates each time). For permutation deduplication: sort first, then `if (i > 0 && nums[i] == nums[i-1] && !visited[i-1]) continue` — the `!visited[i-1]` condition is subtle but critical.",
+    "problems": [
+      "LC 39. Combination Sum",
+      "LC 46. Permutations",
+      "LC 78. Subsets"
+    ],
+    "category": "Backtracking",
+    "difficulty": "Medium"
   },
-  "Graph: BFS": {
-    "trigger": "Shortest path in unweighted graphs, Minimum steps to reach a state, Word Ladder",
+  "BFS": {
+    "trigger": "Shortest path in an unweighted graph, Minimum transformations between states, Bipartite graph verification",
     "complexity": "Time: O(V + E) | Space: O(V)",
-    "code": "queue<int> q;\nunordered_set<int> visited;\n\nq.push(start_node);\nvisited.insert(start_node);\nint steps = 0;\n\nwhile (!q.empty()) {\n    int size = q.size();\n    // Process level by level to count steps correctly\n    for (int i = 0; i < size; i++) {\n        int curr = q.front();\n        q.pop();\n        \n        if (curr == target) return steps;\n        \n        for (int next_node : graph[curr]) {\n            if (!visited.contains(next_node)) {\n                visited.insert(next_node);\n                q.push(next_node);\n            }\n        }\n    }\n    steps++;\n}\nreturn -1;"
+    "code": "queue<int> q;\nunordered_set<int> visited;\n\nq.push(start_node);\nvisited.insert(start_node); // Mark WHEN ENQUEUING (not dequeuing!)\nint steps = 0;\n\nwhile (!q.empty()) {\n    int size = q.size(); // Process level by level\n    for (int i = 0; i < size; i++) {\n        int curr = q.front(); q.pop();\n\n        if (curr == target) return steps;\n\n        for (int next_node : graph[curr]) {\n            if (!visited.count(next_node)) {\n                visited.insert(next_node); // Mark BEFORE pushing\n                q.push(next_node);\n            }\n        }\n    }\n    steps++;\n}",
+    "gotchas": "Mark nodes as visited WHEN ENQUEUING (not when dequeuing). Dequeuing-based marking allows duplicate entries in the queue, causing TLE or wrong shortest path counts. BFS on unweighted graphs ALWAYS gives the optimal (shortest) path — use Dijkstra only for weighted graphs.",
+    "problems": [
+      "LC 127. Word Ladder",
+      "LC 994. Rotting Oranges",
+      "LC 1091. Shortest Path in Binary Matrix"
+    ],
+    "category": "Graph",
+    "difficulty": "Medium"
   },
-  "Graph: Topological Sort": {
-    "trigger": "Task scheduling, Dependency resolution, Cycle detection in directed graphs, Alien Dictionary",
+  "DFS + Cycle Detection": {
+    "trigger": "Detect cycle in directed graph, Validate DAG, Find safe nodes (nodes that don't lead to a cycle), DFS-based connected components",
+    "complexity": "Time: O(V + E) | Space: O(V)",
+    "code": "// --- DFS 3-Color Cycle Detection (Directed Graph) ---\n// WHITE=0 (unvisited), GRAY=1 (in current DFS stack), BLACK=2 (fully done)\nvector<int> color(n, 0);\nbool hasCycle = false;\n\nfunction<void(int)> dfs = [&](int u) {\n    color[u] = 1; // Mark GRAY\n    for (int v : graph[u]) {\n        if (color[v] == 1) { hasCycle = true; return; } // Back edge = cycle!\n        if (color[v] == 0) dfs(v);\n    }\n    color[u] = 2; // Mark BLACK (fully processed)\n};\n\nfor (int i = 0; i < n; i++)\n    if (color[i] == 0) dfs(i);\n\n// --- DFS Cycle Detection (Undirected Graph) ---\n// Track parent to avoid treating the edge we came from as a back edge\nfunction<bool(int, int)> dfsCycle = [&](int u, int parent) -> bool {\n    color[u] = 1;\n    for (int v : graph[u]) {\n        if (v == parent) continue;  // Ignore the edge we came from\n        if (color[v] == 1) return true; // Back edge = cycle\n        if (color[v] == 0 && dfsCycle(v, u)) return true;\n    }\n    color[u] = 2;\n    return false;\n};",
+    "gotchas": "A cycle exists in a directed graph only if you reach a GRAY node (in the current DFS path). Reaching a BLACK node is fine (it's already fully processed). For undirected graphs, you MUST track the parent node to avoid false positives from the bi-directional edge you arrived from.",
+    "problems": [
+      "LC 207. Course Schedule",
+      "LC 261. Graph Valid Tree",
+      "LC 802. Find Eventual Safe States"
+    ],
+    "category": "Graph",
+    "difficulty": "Medium"
+  },
+  "Grid Traversal": {
+    "trigger": "Count or flood-fill connected regions in a matrix, Shortest path through a grid, Multi-source BFS (enqueue all sources simultaneously)",
+    "complexity": "Time: O(M*N) | Space: O(M*N)",
+    "code": "// 4-directional movement vectors\nconst int dx[] = {0, 0, 1, -1};\nconst int dy[] = {1, -1, 0, 0};\nint m = grid.size(), n = grid[0].size();\n\n// --- Grid DFS (Flood Fill / Island marking) ---\n// Modify grid in-place to mark visited (avoids separate visited array)\nvoid dfs(vector<vector<char>>& grid, int r, int c) {\n    if (r < 0 || r >= m || c < 0 || c >= n || grid[r][c] != '1') return;\n    grid[r][c] = '0'; // Mark visited in-place\n    for (int d = 0; d < 4; d++)\n        dfs(grid, r + dx[d], c + dy[d]);\n}\n\n// --- Grid BFS (Shortest Path / Multi-source) ---\nqueue<pair<int,int>> q;\nvector<vector<int>> dist(m, vector<int>(n, -1));\n\nfor (int r = 0; r < m; r++)        // Enqueue ALL sources at once\n    for (int c = 0; c < n; c++)\n        if (grid[r][c] == '2') { q.push({r, c}); dist[r][c] = 0; }\n\nwhile (!q.empty()) {\n    auto [r, c] = q.front(); q.pop();\n    for (int d = 0; d < 4; d++) {\n        int nr = r + dx[d], nc = c + dy[d];\n        if (nr >= 0 && nr < m && nc >= 0 && nc < n && dist[nr][nc] == -1) {\n            dist[nr][nc] = dist[r][c] + 1;\n            q.push({nr, nc});\n        }\n    }\n}",
+    "gotchas": "Always check BOTH bounds AND visited status before enqueuing or recursing. In-place modification (`grid[r][c] = '0'`) avoids a separate `visited` matrix. For multi-source BFS (e.g., Rotting Oranges), enqueue ALL sources BEFORE starting BFS — don't process them sequentially. Mark visited when enqueuing (not dequeuing).",
+    "problems": [
+      "LC 200. Number of Islands",
+      "LC 994. Rotting Oranges",
+      "LC 130. Surrounded Regions"
+    ],
+    "category": "Graph",
+    "difficulty": "Medium"
+  },
+  "Topological Sort": {
+    "trigger": "Order tasks with prerequisites, Detect impossible scheduling cycles, Reconstruct a valid execution sequence from dependency rules",
     "complexity": "Time: O(V + E) | Space: O(V + E)",
-    "code": "vector<int> indegree(numCourses, 0);\nfor (const vector<int>& edge : prerequisites) {\n    graph[edge[1]].push_back(edge[0]);\n    indegree[edge[0]]++;\n}\n\nqueue<int> q;\nfor (int i = 0; i < numCourses; i++) {\n    if (indegree[i] == 0) q.push(i);\n}\n\nvector<int> order;\nwhile (!q.empty()) {\n    int curr = q.front();\n    q.pop();\n    order.push_back(curr);\n    \n    for (int next_node : graph[curr]) {\n        // Decrement indegree; if it hits 0, it's ready to be processed\n        if (--indegree[next_node] == 0) q.push(next_node);\n    }\n}\n// Important: Check for cycles\nreturn order.size() == numCourses ? order : vector<int>();"
+    "code": "// Kahn's Algorithm (BFS-based)\nvector<int> indegree(numCourses, 0);\nvector<vector<int>> graph(numCourses);\nfor (const vector<int>& edge : prerequisites) {\n    graph[edge[1]].push_back(edge[0]); // edge[1] -> edge[0]\n    indegree[edge[0]]++;\n}\n\nqueue<int> q;\nfor (int i = 0; i < numCourses; i++)\n    if (indegree[i] == 0) q.push(i); // Start with nodes with no prerequisites\n\nvector<int> order;\nwhile (!q.empty()) {\n    int curr = q.front(); q.pop();\n    order.push_back(curr);\n    for (int next : graph[curr]) {\n        if (--indegree[next] == 0) q.push(next);\n    }\n}\n\n// If order.size() != numCourses, a cycle exists (impossible ordering)\nreturn (int)order.size() == numCourses ? order : vector<int>();",
+    "gotchas": "If `order.size() != numCourses`, a cycle was detected — topological sort is undefined for cyclic graphs. Build BOTH the `graph` adjacency list AND the `indegree` array from prerequisites — a common mistake is building only one. The edge direction matters: `edge[1] -> edge[0]` means 'edge[1] is a prerequisite of edge[0]'.",
+    "problems": [
+      "LC 207. Course Schedule",
+      "LC 210. Course Schedule II",
+      "LC 269. Alien Dictionary"
+    ],
+    "category": "Graph",
+    "difficulty": "Medium"
   },
-  "Graph: Union-Find (DSU)": {
-    "trigger": "Dynamic connectivity, Cycle detection in undirected graphs, Group/Set union and find",
-    "complexity": "Time: O(α(V)) ≈ O(1) | Space: O(V)",
-    "code": "struct DSU {\n    vector<int> parent, sz;\n    DSU(int n) {\n        parent.resize(n);\n        sz.assign(n, 1);\n        iota(parent.begin(), parent.end(), 0);\n    }\n    \n    int find(int i) {\n        while (i != parent[i]) {    // Iterative Path Halving for optimal speed & space\n            parent[i] = parent[parent[i]];\n            i = parent[i];\n        }\n        return i;\n    }\n    \n    bool unite(int i, int j) {\n        int root_i = find(i), root_j = find(j);\n        if (root_i == root_j) return false;\n        \n        if (sz[root_i] < sz[root_j]) swap(root_i, root_j);  // Union by Size: attach smaller tree to larger tree\n        parent[root_j] = root_i;\n        sz[root_i] += sz[root_j];\n        return true;\n    }\n};"
+  "Union-Find (DSU)": {
+    "trigger": "Dynamic connectivity, Cycle detection in undirected graphs, Group/Set union and membership, Minimum Spanning Tree (Kruskal)",
+    "complexity": "Time: O(α(V)) ≈ O(1) amortized | Space: O(V)",
+    "code": "struct DSU {\n    vector<int> parent, sz;\n    DSU(int n) {\n        parent.resize(n);\n        sz.assign(n, 1);\n        iota(parent.begin(), parent.end(), 0); // parent[i] = i\n    }\n\n    int find(int i) { // Iterative Path Halving (optimal speed & space)\n        while (i != parent[i]) {\n            parent[i] = parent[parent[i]]; // Path halving\n            i = parent[i];\n        }\n        return i;\n    }\n\n    bool unite(int i, int j) { // Returns true if a merge actually happened\n        int ri = find(i), rj = find(j);\n        if (ri == rj) return false; // Already in same component\n        if (sz[ri] < sz[rj]) swap(ri, rj); // Union by Size\n        parent[rj] = ri;\n        sz[ri] += sz[rj];\n        return true;\n    }\n\n    bool connected(int i, int j) { return find(i) == find(j); }\n};",
+    "gotchas": "The return value of `unite()` (whether a merge happened) is crucial: if `unite()` returns false for a new edge in an undirected graph, a CYCLE was detected. Use Union by Size (or Rank) to keep trees flat — without it, DSU degrades to O(log N). Path halving (iterative) is preferred over recursive path compression for stack safety.",
+    "problems": [
+      "LC 684. Redundant Connection",
+      "LC 323. Number of Connected Components in an Undirected Graph",
+      "LC 1584. Min Cost to Connect All Points"
+    ],
+    "category": "Graph",
+    "difficulty": "Medium"
   },
-  "Graph: Dijkstra": {
-    "trigger": "Shortest path in graphs with non-negative weights, Network Delay Time, Minimum cost",
+  "Dijkstra": {
+    "trigger": "Shortest path in a weighted graph with non-negative edges, Minimum cost to reach all nodes from a source",
     "complexity": "Time: O((V + E) log V) | Space: O(V + E)",
-    "code": "vector<int> dist(n, INT_MAX);\n// Min-heap storing {distance, node}\npriority_queue<pair<int, int>, vector<pair<int, int>>, greater<>> pq;\n\ndist[start] = 0;\npq.push({0, start});\n\nwhile (!pq.empty()) {\n    auto [d, u] = pq.top();\n    pq.pop();\n    \n    // Lazy deletion: skip if we've already found a shorter path to u\n    if (d > dist[u]) continue;\n    \n    for (auto& [v, weight] : graph[u]) {\n        if (dist[u] + weight < dist[v]) {\n            dist[v] = dist[u] + weight;\n            pq.push({dist[v], v});\n        }\n    }\n}"
+    "code": "// Build adjacency list: graph[u] = {{v, weight}, ...}\nvector<vector<pair<int,int>>> graph(n);\nfor (auto& e : edges)\n    graph[e[0]].push_back({e[1], e[2]});\n\nvector<int> dist(n, INT_MAX);\n// Min-heap: {distance, node}\npriority_queue<pair<int,int>, vector<pair<int,int>>, greater<>> pq;\n\ndist[start] = 0;\npq.push({0, start});\n\nwhile (!pq.empty()) {\n    auto [d, u] = pq.top(); pq.pop();\n\n    // Lazy deletion: skip stale entries (already found a shorter path to u)\n    if (d > dist[u]) continue;\n\n    for (auto& [v, weight] : graph[u]) {\n        if (dist[u] + weight < dist[v]) {\n            dist[v] = dist[u] + weight;\n            pq.push({dist[v], v});\n        }\n    }\n}",
+    "gotchas": "Dijkstra does NOT work with NEGATIVE edge weights (use Bellman-Ford instead). The `if (d > dist[u]) continue;` 'lazy deletion' check is critical — without it, stale priority queue entries cause incorrect results. Initialize `dist` to INT_MAX and check for overflow when computing `dist[u] + weight`.",
+    "problems": [
+      "LC 743. Network Delay Time",
+      "LC 1514. Path with Maximum Probability",
+      "LC 787. Cheapest Flights Within K Stops"
+    ],
+    "category": "Graph",
+    "difficulty": "Medium"
   },
-  "Segment Tree": {
-    "trigger": "Dynamic range queries (Sum/Max/Min) and point/range updates",
-    "complexity": "Time: O(log N) per query/update | Space: O(N)",
-    "code": "const int INVALID = -1;\n// Highly recommended to allocate 4 * N space for the tree array\n\nvoid update(vector<int>& tree, int node, int start, int end, int index, int val) {\n    if (start == end) {\n        tree[node] = val;\n        return;\n    }\n    int mid = start + (end - start) / 2;\n    if (index <= mid) update(tree, 2 * node, start, mid, index, val);\n    else update(tree, 2 * node + 1, mid + 1, end, index, val);\n    \n    tree[node] = max(tree[2 * node], tree[2 * node + 1]);\n}\n\nint query(vector<int>& tree, int node, int start, int end, int l, int r) {\n    if (r < start || l > end) return INVALID;\n    if (l <= start && end <= r) return tree[node];\n    \n    int mid = start + (end - start) / 2;\n    int left_res = query(tree, 2 * node, start, mid, l, r);\n    int right_res = query(tree, 2 * node + 1, mid + 1, end, l, r);\n    return max(left_res, right_res);\n}"
+  "Greedy": {
+    "trigger": "Interval Scheduling (non-overlapping), Minimum jumps, Task assignment. Use ONLY when local optimum guarantees global optimum — always verify with a counterexample.",
+    "complexity": "Time: O(N log N) for sorting | Space: O(1)",
+    "code": "// --- Non-overlapping Intervals (sort by END time) ---\nsort(intervals.begin(), intervals.end(), [](const vector<int>& a, const vector<int>& b) {\n    return a[1] < b[1]; // Sort by END time, not start time\n});\n\nint count = 0, current_end = INT_MIN;\nfor (const vector<int>& interval : intervals) {\n    if (interval[0] >= current_end) { // No overlap: greedy pick\n        count++;\n        current_end = interval[1];\n    }\n}\n\n// --- Jump Game II (minimum jumps to reach end) ---\nint jumps = 0, cur_end = 0, farthest = 0;\nfor (int i = 0; i < (int)nums.size() - 1; i++) {\n    farthest = max(farthest, i + nums[i]);\n    if (i == cur_end) { // Must jump here\n        jumps++;\n        cur_end = farthest;\n    }\n}",
+    "gotchas": "For interval scheduling, sort by END time (not start time). Sorting by start time is incorrect and a common mistake. Always ask yourself: 'Can a counterexample disprove this greedy?' Greedy is NOT always applicable — if in doubt, try DP first.",
+    "problems": [
+      "LC 435. Non-overlapping Intervals",
+      "LC 55. Jump Game",
+      "LC 45. Jump Game II"
+    ],
+    "category": "Greedy",
+    "difficulty": "Medium"
+  },
+  "Linear DP": {
+    "trigger": "Optimal decision at each step depends on a fixed number of prior states, Binary choice (take or skip) at each element, Longest strictly increasing subsequence",
+    "complexity": "Time: O(N) or O(N log N) for LIS | Space: O(1) or O(N)",
+    "code": "// --- House Robber (O(N) time, O(1) space) ---\n// dp[i] = max money from first i houses\n// Recurrence: dp[i] = max(dp[i-1], dp[i-2] + nums[i])\nint prev2 = 0, prev1 = 0;\nfor (int num : nums) {\n    int cur = max(prev1, prev2 + num);\n    prev2 = prev1;\n    prev1 = cur;\n}\nint result = prev1;\n\n// --- Longest Increasing Subsequence: O(N log N) via patience sorting ---\n// tails[i] = smallest possible tail of any IS of length i+1\nvector<int> tails;\nfor (int num : nums) {\n    // lower_bound for strictly increasing (use upper_bound for non-decreasing)\n    auto it = lower_bound(tails.begin(), tails.end(), num);\n    if (it == tails.end()) tails.push_back(num); // Extend LIS length\n    else *it = num;                               // Replace: minimize tail value\n}\nint lisLength = tails.size(); // Note: tails is NOT the actual LIS sequence",
+    "gotchas": "Space optimization: if dp[i] depends only on dp[i-1] and dp[i-2], use two variables. For LIS O(N log N): `tails` is NOT the actual LIS — it stores the smallest tails and is used only for length calculation. Use `lower_bound` for strictly increasing, `upper_bound` for non-decreasing. Always verify base cases (dp[0] and dp[1]).",
+    "problems": [
+      "LC 198. House Robber",
+      "LC 300. Longest Increasing Subsequence",
+      "LC 152. Maximum Product Subarray"
+    ],
+    "category": "DP",
+    "difficulty": "Medium"
+  },
+  "Knapsack DP": {
+    "trigger": "Select items to hit an exact target sum, Maximize value under a capacity constraint, Partition a set into equal halves, Coin combinations with or without item reuse",
+    "complexity": "Time: O(N * W) | Space: O(W)",
+    "code": "// --- 0/1 Knapsack (each item used AT MOST ONCE) ---\n// Iterate weight BACKWARDS to prevent reusing the same item\nvector<int> dp(W + 1, 0);\nfor (auto& [weight, value] : items)\n    for (int w = W; w >= weight; w--)       // <-- BACKWARDS\n        dp[w] = max(dp[w], dp[w - weight] + value);\n\n// --- Unbounded Knapsack (each item can be reused UNLIMITED times) ---\n// Iterate weight FORWARDS to allow reusing the same item\nvector<int> dp(W + 1, 0);\nfor (auto& [weight, value] : items)\n    for (int w = weight; w <= W; w++)       // <-- FORWARDS\n        dp[w] = max(dp[w], dp[w - weight] + value);\n\n// --- Partition Equal Subset Sum (0/1 Knapsack on bool dp) ---\nint total = reduce(nums.begin(), nums.end(), 0);\nif (total % 2 != 0) return false; // Odd sum: impossible\nint target = total / 2;\nvector<bool> dp(target + 1, false);\ndp[0] = true;\nfor (int num : nums)\n    for (int w = target; w >= num; w--)     // <-- BACKWARDS (0/1)\n        dp[w] = dp[w] || dp[w - num];\nreturn dp[target];",
+    "gotchas": "The CRITICAL rule: 0/1 Knapsack → iterate weight BACKWARDS (prevent reuse). Unbounded Knapsack → iterate weight FORWARDS (allow reuse). Getting this backwards is the #1 mistake. For partition problems: if total sum is odd, return false immediately. Initialize `dp[0] = true` (can always form sum 0).",
+    "problems": [
+      "LC 416. Partition Equal Subset Sum",
+      "LC 518. Coin Change II",
+      "LC 322. Coin Change"
+    ],
+    "category": "DP",
+    "difficulty": "Medium"
+  },
+  "Grid DP": {
+    "trigger": "Count or optimize paths across a 2D grid, Minimum cost movement with restricted directional choices",
+    "complexity": "Time: O(M*N) | Space: O(M*N) reducible to O(N)",
+    "code": "int m = grid.size(), n = grid[0].size();\n\n// --- Unique Paths (count all paths from top-left to bottom-right) ---\n// dp[r][c] = number of ways to reach cell (r, c)\nvector<vector<int>> dp(m, vector<int>(n, 1)); // First row & col = 1\nfor (int r = 1; r < m; r++)\n    for (int c = 1; c < n; c++)\n        dp[r][c] = dp[r-1][c] + dp[r][c-1];\nreturn dp[m-1][n-1];\n\n// --- Minimum Path Sum ---\n// dp[r][c] = minimum cost to reach cell (r, c)\nvector<vector<int>> dp(m, vector<int>(n));\ndp[0][0] = grid[0][0];\nfor (int c = 1; c < n; c++) dp[0][c] = dp[0][c-1] + grid[0][c]; // Init first row\nfor (int r = 1; r < m; r++) dp[r][0] = dp[r-1][0] + grid[r][0]; // Init first col\nfor (int r = 1; r < m; r++)\n    for (int c = 1; c < n; c++)\n        dp[r][c] = min(dp[r-1][c], dp[r][c-1]) + grid[r][c];\nreturn dp[m-1][n-1];",
+    "gotchas": "Initialize the ENTIRE first row and first column as base cases before the inner loop. For obstacles: set `dp[r][c] = 0` (for count) or `INT_MAX` (for min cost) at obstacle cells. Space can be reduced to O(N) by maintaining a single row array and processing in-place — process row by row, left to right.",
+    "problems": [
+      "LC 62. Unique Paths",
+      "LC 64. Minimum Path Sum",
+      "LC 63. Unique Paths II"
+    ],
+    "category": "DP",
+    "difficulty": "Medium"
+  },
+  "String DP": {
+    "trigger": "Transform one string into another with minimum operations, Longest Common Subsequence (LCS), Longest palindromic subsequence or substring",
+    "complexity": "Time: O(M*N) | Space: O(M*N) reducible to O(N)",
+    "code": "// --- Longest Common Subsequence ---\n// dp[i][j] = LCS of s1[0..i-1] and s2[0..j-1]\nint m = s1.size(), n = s2.size();\nvector<vector<int>> dp(m + 1, vector<int>(n + 1, 0));\nfor (int i = 1; i <= m; i++) {\n    for (int j = 1; j <= n; j++) {\n        if (s1[i-1] == s2[j-1]) dp[i][j] = dp[i-1][j-1] + 1;\n        else                     dp[i][j] = max(dp[i-1][j], dp[i][j-1]);\n    }\n}\nreturn dp[m][n];\n\n// --- Edit Distance (Levenshtein) ---\n// dp[i][j] = min operations to transform word1[0..i-1] into word2[0..j-1]\nvector<vector<int>> dp(m + 1, vector<int>(n + 1));\nfor (int i = 0; i <= m; i++) dp[i][0] = i; // Delete all of word1\nfor (int j = 0; j <= n; j++) dp[0][j] = j; // Insert all of word2\nfor (int i = 1; i <= m; i++) {\n    for (int j = 1; j <= n; j++) {\n        if (word1[i-1] == word2[j-1])\n            dp[i][j] = dp[i-1][j-1]; // No operation needed\n        else\n            dp[i][j] = 1 + min({dp[i-1][j],    // Delete from word1\n                                 dp[i][j-1],    // Insert into word1\n                                 dp[i-1][j-1]   // Replace\n                                });\n    }\n}\nreturn dp[m][n];",
+    "gotchas": "LCS base case: `dp[i][0] = dp[0][j] = 0` (empty string has LCS 0 with anything). Edit Distance base cases: `dp[i][0] = i` (delete i chars) and `dp[0][j] = j` (insert j chars). Space can be reduced to O(N) using two 1D arrays (previous and current row). Note: LCS gives length only; backtracking through dp table recovers the actual sequence.",
+    "problems": [
+      "LC 1143. Longest Common Subsequence",
+      "LC 72. Edit Distance",
+      "LC 647. Palindromic Substrings"
+    ],
+    "category": "DP",
+    "difficulty": "Medium"
+  },
+  "Interval DP": {
+    "trigger": "Optimal value over all contiguous sub-intervals, Break or merge array segments optimally, Two-player alternating game on a linear structure",
+    "complexity": "Time: O(N³) | Space: O(N²)",
+    "code": "// --- Interval DP Template (e.g., Burst Balloons) ---\n// dp[l][r] = optimal value for the subproblem on interval [l, r]\nint n = nums.size();\nvector<vector<int>> dp(n, vector<int>(n, 0));\n\n// CRITICAL: Iterate by LENGTH of interval, not by start index\nfor (int len = 1; len <= n; len++) {\n    for (int l = 0; l + len - 1 < n; l++) {\n        int r = l + len - 1;\n        // Try each position k as the LAST operation performed in [l, r]\n        for (int k = l; k <= r; k++) {\n            int left_val  = (k > l) ? dp[l][k-1] : 0;\n            int right_val = (k < r) ? dp[k+1][r] : 0;\n            dp[l][r] = max(dp[l][r], left_val + score(k) + right_val);\n        }\n    }\n}\nreturn dp[0][n-1];",
+    "gotchas": "ALWAYS iterate by LENGTH of interval (outer loop), not by start index. The split point k represents the LAST operation performed — this is the key insight for Burst Balloons. Memoize with `dp[l][r]`. Base cases: `dp[i][i]` for single-element intervals. Adding sentinel values at array boundaries (e.g., nums[-1] = nums[n] = 1 for Burst Balloons) simplifies boundary handling.",
+    "problems": [
+      "LC 312. Burst Balloons",
+      "LC 1312. Minimum Insertion Steps to Make a String Palindrome",
+      "LC 516. Longest Palindromic Subsequence"
+    ],
+    "category": "DP",
+    "difficulty": "Hard"
   },
   "Digit DP": {
-    "trigger": "Count numbers in range [L, R] satisfying specific digit-based rules (e.g., no digit 4)",
-    "complexity": "Time: O(digits * states * 10)",
-    "code": "long long memo[20][2][2][state_size];\n\nlong long dfs(int pos, bool limit, bool lead, int state, const string& num) {\n    if (pos == num.size()) return 1; // Found a valid number\n    if (memo[pos][limit][lead][state] != -1) return memo[pos][limit][lead][state];\n\n    int up = limit ? num[pos] - '0' : 9;\n    long long res = 0;\n    \n    for (int i = 0; i <= up; i++) {\n        // Correctly propagate the 'limit' flag\n        bool next_limit = limit && (i == up);\n        // Handle 'lead zero' if it affects the digit state\n        bool next_lead = lead && (i == 0);\n        \n        res += dfs(pos + 1, next_limit, next_lead, next_state, num);\n    }\n    return memo[pos][limit][lead][state] = res;\n}"
+    "trigger": "Count integers in range [L, R] satisfying digit-based constraints (e.g., no digit 4, digit sum <= K, non-decreasing digits)",
+    "complexity": "Time: O(digits * 2 * 2 * states * 10) | Space: O(same)",
+    "code": "long long memo[20][2][2][state_size];\n// Dimensions: [position][is_tight/limit][has_leading_zero][custom_state]\n\nlong long dfs(int pos, bool limit, bool lead, int state, const string& num) {\n    if (pos == (int)num.size()) {\n        // Base case: reached end of number\n        return isValid(state) ? 1 : 0;\n    }\n    if (memo[pos][limit][lead][state] != -1)\n        return memo[pos][limit][lead][state];\n\n    int up = limit ? (num[pos] - '0') : 9; // Max digit we can place\n    long long res = 0;\n\n    for (int d = 0; d <= up; d++) {\n        bool next_limit = limit && (d == up);   // Still tight if we chose max digit\n        bool next_lead  = lead  && (d == 0);    // Still leading zero\n        int  next_state = transition(state, d, next_lead);\n\n        res += dfs(pos + 1, next_limit, next_lead, next_state, num);\n    }\n    return memo[pos][limit][lead][state] = res;\n}\n\n// Usage: count(R) - count(L - 1)\nmemset(memo, -1, sizeof(memo));\nreturn dfs(0, true, true, initial_state, to_string(R));",
+    "gotchas": "Note: Digit DP is a competitive programming pattern. The `limit` flag prevents placing a digit larger than the corresponding digit in the bound. The `lead` flag handles leading zeros (e.g., '007' is just 7). Always use `memset(memo, -1, sizeof(memo))` before each top-level call.",
+    "problems": [
+      "LC 233. Number of Digit One",
+      "LC 902. Numbers At Most N Given Digit Set",
+      "LC 1397. Find All Good Strings"
+    ],
+    "category": "DP",
+    "difficulty": "Hard"
   },
   "Bitmask DP": {
-    "trigger": "N < 20, Traveling Salesperson (TSP), State representation using bits, Subset permutations",
-    "complexity": "Time: O(2^N * N^2) | Space: O(2^N * N)",
-    "code": "// Check if the i-th bit is set in the mask\n// if ((mask & (1 << i)) != 0)\n\n// Set the i-th bit in the mask\n// int next_mask = mask | (1 << i);\n\nint dfs(int mask, int last_node) {\n    if (mask == (1 << N) - 1) return 0; // All nodes visited\n    if (memo[mask][last_node] != -1) return memo[mask][last_node];\n    \n    int best = INT_MAX;\n    for (int i = 0; i < N; i++) {\n        if ((mask & (1 << i)) == 0) { // If node 'i' is NOT visited\n            int cost = graph[last_node][i] + dfs(mask | (1 << i), i);\n            best = min(best, cost);\n        }\n    }\n    return memo[mask][last_node] = best;\n}"
+    "trigger": "N <= 20, TSP (Traveling Salesman), Enumerate all subsets/permutations of a small set, State represented as a bitmask",
+    "complexity": "Time: O(2^N * N²) | Space: O(2^N * N)",
+    "code": "// --- Common Bitmask Operations ---\n// Check if bit i is set:    (mask & (1 << i)) != 0\n// Set bit i:                mask | (1 << i)\n// Clear bit i:              mask & ~(1 << i)\n// Check all N bits set:     mask == (1 << N) - 1\n// Enumerate all subsets:    for (int sub = mask; sub; sub = (sub-1) & mask)\n\n// --- Bitmask DP (TSP / visit all nodes) ---\n// dp[mask][last] = min cost to visit nodes in 'mask', ending at 'last'\nvector<vector<int>> dp(1 << N, vector<int>(N, INT_MAX));\ndp[1 << start][start] = 0;\n\nfor (int mask = 0; mask < (1 << N); mask++) {\n    for (int u = 0; u < N; u++) {\n        if (!(mask & (1 << u))) continue; // u must be in mask\n        if (dp[mask][u] == INT_MAX) continue;\n        for (int v = 0; v < N; v++) {\n            if (mask & (1 << v)) continue; // v must NOT be in mask\n            int next_mask = mask | (1 << v);\n            dp[next_mask][v] = min(dp[next_mask][v], dp[mask][u] + graph[u][v]);\n        }\n    }\n}",
+    "gotchas": "Note: Bitmask DP is a competitive programming pattern. Only practical for N <= 20 (2^20 ≈ 1M states). Watch for INT_MAX overflow: check `dp[mask][u] != INT_MAX` before adding to it. When enumerating subsets with `sub = (sub-1) & mask`, the loop must use `sub > 0` (not `sub != 0`) to include the empty subset separately.",
+    "problems": [
+      "LC 847. Shortest Path Visiting All Nodes",
+      "LC 1125. Smallest Sufficient Team",
+      "LC 943. Find the Shortest Superstring"
+    ],
+    "category": "DP",
+    "difficulty": "Hard"
+  },
+  "Bit Manipulation": {
+    "trigger": "Find unique element (XOR), Count set bits, Check power of two, Toggle/flip without extra space, Enumerate subsets",
+    "complexity": "Time: O(N) or O(1) | Space: O(1)",
+    "code": "// --- Common Operations ---\n// Check bit i:             (x >> i) & 1\n// Set bit i:               x |= (1 << i)\n// Clear bit i:             x &= ~(1 << i)\n// Toggle bit i:            x ^= (1 << i)\n// Clear lowest set bit:    x &= (x - 1)    // Also: n & (n-1) == 0 means power of 2\n// Isolate lowest set bit:  x & (-x)\n\n// --- XOR Trick: Single Number (all others appear twice) ---\nint single = 0;\nfor (int num : nums) single ^= num; // Pairs cancel: a ^ a = 0\n\n// --- Power of Two check ---\nbool isPow2 = (n > 0) && ((n & (n - 1)) == 0);\n\n// --- Count set bits (Brian Kernighan's Algorithm) ---\nint countBits(int n) {\n    int count = 0;\n    while (n) { n &= (n - 1); count++; } // Each iteration clears lowest set bit\n    return count;\n}\n// Or simply: __builtin_popcount(n)\n\n// --- Enumerate all non-empty subsets of a bitmask ---\nfor (int sub = mask; sub > 0; sub = (sub - 1) & mask) {\n    // Process subset 'sub' of 'mask'\n}",
+    "gotchas": "`n & (n-1)` clears the lowest set bit (0 if n is a power of 2). XOR is self-inverse: `a ^ a = 0` and `a ^ 0 = a`. Beware of signed integer overflow with left shift on int: use `1LL << i` for i >= 31. Use `__builtin_popcount(n)` for fast bit counting in competitive/interview settings.",
+    "problems": [
+      "LC 136. Single Number",
+      "LC 191. Number of 1 Bits",
+      "LC 338. Counting Bits"
+    ],
+    "category": "Math",
+    "difficulty": "Medium"
   },
   "Modulo Inverse & Comb(n, k)": {
-    "trigger": "Count 'number of ways' or permutations/combinations, return answer modulo 10^9+7",
-    "complexity": "Time: O(N log MOD) for prep, O(1) per query | Space: O(N)",
-    "code": "int MOD = 1e9 + 7;\n\n// Fast exponentiation: computes (base^exp) % MOD\nlong long power(long long base, long long exp) {\n    long long res = 1;\n    base %= MOD;\n    while (exp > 0) {\n        if (exp % 2 == 1) res = (res * base) % MOD;\n        base = (base * base) % MOD;\n        exp /= 2;\n    }\n    return res;\n}\n\n// Fermat's Little Theorem: a^-1 ≡ a^(p-2) (mod p)\nlong long modInverse(long long n) {\n    return power(n, MOD - 2);\n}\n\n// nCr % MOD\nlong long nCr(int n, int r, vector<long long>& fact) {\n    if (r < 0 || r > n) return 0;\n    long long num = fact[n];\n    long long den = (fact[r] * fact[n - r]) % MOD;\n    return (num * modInverse(den)) % MOD;\n}"
+    "trigger": "Count distinct arrangements or selections modulo a prime, Compute nCr efficiently under modular arithmetic",
+    "complexity": "Time: O(N log MOD) prep, O(1) per query | Space: O(N)",
+    "code": "const long long MOD = 1e9 + 7;\n\n// Fast exponentiation: computes (base^exp) % MOD\nlong long power(long long base, long long exp) {\n    long long res = 1;\n    base %= MOD;\n    while (exp > 0) {\n        if (exp % 2 == 1) res = (res * base) % MOD;\n        base = (base * base) % MOD;\n        exp /= 2;\n    }\n    return res;\n}\n\n// Modular inverse via Fermat's Little Theorem: a^-1 = a^(p-2) mod p\n// Valid only when MOD is a prime and a is not divisible by MOD\nlong long modInverse(long long n) { return power(n, MOD - 2); }\n\n// Precompute factorials, then nCr in O(1)\nvector<long long> fact(MAXN);\nfact[0] = 1;\nfor (int i = 1; i < MAXN; i++) fact[i] = fact[i-1] * i % MOD;\n\nlong long nCr(int n, int r) {\n    if (r < 0 || r > n) return 0;\n    return fact[n] % MOD * modInverse(fact[r]) % MOD * modInverse(fact[n-r]) % MOD;\n}",
+    "gotchas": "Fermat's Little Theorem only works when MOD is PRIME and n is not 0 mod p. Precompute `fact[]` AND `inv_fact[]` (precomputed inverses of factorials) for O(1) per nCr query — computing `modInverse` on the fly is O(log MOD) per call. When multiplying two `long long` values close to MOD (≈1e9), the product can overflow: always take `% MOD` after each multiplication.",
+    "problems": [
+      "LC 62. Unique Paths",
+      "LC 1220. Count Vowels Permutation",
+      "LC 1569. Number of Ways to Reorder Array to Get Same BST"
+    ],
+    "category": "Math",
+    "difficulty": "Hard"
   },
   "Rolling Hash (Rabin-Karp)": {
-    "trigger": "Substring search, Longest Duplicate Substring, Substring hashing to avoid TLE/MLE",
+    "trigger": "O(N) substring search and hashing, Detect repeated substrings, Avoid TLE from naive O(N²) string comparison",
     "complexity": "Time: O(N) | Space: O(N)",
-    "code": "long long MOD = 1e9 + 7;\nlong long BASE = 131;\n\nvector<long long> hash_val(n + 1, 0);\nvector<long long> power(n + 1, 1);\n\n// Precompute hashes and powers of BASE\nfor (int i = 0; i < n; i++) {\n    power[i + 1] = (power[i] * BASE) % MOD;\n    // Take modulo after each addition and multiplication\n    hash_val[i + 1] = (hash_val[i] * BASE + (s[i] - 'a' + 1)) % MOD;\n}\n\n// Function to get hash of substring s[L...R] (0-indexed)\n// Gotcha: h1 - h2 can be negative in C++.\n// Must add MOD before taking the final modulo to ensure a positive result.\nlong long getHash(int L, int R) {\n    long long h1 = hash_val[R + 1];\n    long long h2 = (hash_val[L] * power[R - L + 1]) % MOD;\n    return (h1 - h2 + MOD) % MOD;\n}"
+    "code": "const long long MOD = 1e9 + 7;\nconst long long BASE = 131;\n\nint n = s.size();\nvector<long long> hash_val(n + 1, 0);\nvector<long long> pw(n + 1, 1);\n\n// Precompute hash values and powers of BASE\nfor (int i = 0; i < n; i++) {\n    pw[i + 1] = pw[i] * BASE % MOD;\n    hash_val[i + 1] = (hash_val[i] * BASE + (s[i] - 'a' + 1)) % MOD;\n}\n\n// Hash of substring s[L..R] (0-indexed, inclusive)\n// GOTCHA: subtraction can be negative in C++ -- add MOD before final %\nauto getHash = [&](int L, int R) -> long long {\n    long long h1 = hash_val[R + 1];\n    long long h2 = pw[R - L + 1] * hash_val[L] % MOD;\n    return (h1 - h2 + MOD) % MOD; // +MOD prevents negative result\n};",
+    "gotchas": "CRITICAL: `h1 - h2` can be NEGATIVE in C++ (unlike Python). Always add MOD before taking the final modulo: `(h1 - h2 + MOD) % MOD`. Choose a prime BASE (e.g., 131) and a large prime MOD to reduce hash collisions. For extra safety, use double hashing (two different MOD/BASE pairs) to virtually eliminate false positives.",
+    "problems": [
+      "LC 1044. Longest Duplicate Substring",
+      "LC 187. Repeated DNA Sequences",
+      "LC 686. Repeated String Match"
+    ],
+    "category": "String",
+    "difficulty": "Hard"
+  },
+  "Segment Tree": {
+    "trigger": "Dynamic range queries (sum/max/min) with frequent point or range updates",
+    "complexity": "Time: O(log N) per query/update | Space: O(N)",
+    "code": "// Allocate 4 * N space for the tree array (safe upper bound)\nconst int INVALID = -1; // Identity element for max queries; use 0 for sum\n\n// --- Build (initialize from array) ---\nvoid build(vector<int>& tree, vector<int>& arr, int node, int start, int end) {\n    if (start == end) { tree[node] = arr[start]; return; }\n    int mid = start + (end - start) / 2;\n    build(tree, arr, 2*node,   start,   mid);\n    build(tree, arr, 2*node+1, mid+1,   end);\n    tree[node] = max(tree[2*node], tree[2*node+1]);\n}\n\n// --- Point Update ---\nvoid update(vector<int>& tree, int node, int start, int end, int idx, int val) {\n    if (start == end) { tree[node] = val; return; }\n    int mid = start + (end - start) / 2;\n    if (idx <= mid) update(tree, 2*node,   start, mid,   idx, val);\n    else            update(tree, 2*node+1, mid+1, end,   idx, val);\n    tree[node] = max(tree[2*node], tree[2*node+1]);\n}\n\n// --- Range Query ---\nint query(vector<int>& tree, int node, int start, int end, int l, int r) {\n    if (r < start || l > end) return INVALID;       // Completely outside\n    if (l <= start && end <= r) return tree[node];   // Completely inside\n    int mid = start + (end - start) / 2;\n    return max(query(tree, 2*node,   start, mid,   l, r),\n               query(tree, 2*node+1, mid+1, end,   l, r));\n}",
+    "gotchas": "Always allocate `4 * N` space for the tree array. Left child = `2*node`, right child = `2*node+1` (1-indexed node). The INVALID sentinel must be the identity element for your operation (INVALID=-1 for max, 0 for sum, INT_MAX for min). For range updates, you need an additional `lazy[]` propagation array — significantly more complex.",
+    "problems": [
+      "LC 307. Range Sum Query - Mutable",
+      "LC 315. Count of Smaller Numbers After Self",
+      "LC 218. The Skyline Problem"
+    ],
+    "category": "Advanced DS",
+    "difficulty": "Hard"
+  },
+  "Fenwick Tree (BIT)": {
+    "trigger": "Prefix sum with frequent point updates, Count inversions, Simpler alternative to Segment Tree for invertible operations",
+    "complexity": "Time: O(log N) per update/query | Space: O(N)",
+    "code": "struct BIT {\n    int n;\n    vector<int> tree;\n    BIT(int n) : n(n), tree(n + 1, 0) {} // 1-indexed\n\n    // Add delta to position i (1-indexed)\n    void update(int i, int delta) {\n        for (; i <= n; i += i & (-i)) // Move to next responsible node\n            tree[i] += delta;\n    }\n\n    // Prefix sum [1, i] (1-indexed)\n    int query(int i) {\n        int sum = 0;\n        for (; i > 0; i -= i & (-i)) // Move to parent node\n            sum += tree[i];\n        return sum;\n    }\n\n    // Range sum [l, r] (1-indexed)\n    int query(int l, int r) {\n        return query(r) - query(l - 1);\n    }\n};",
+    "gotchas": "BIT is ALWAYS 1-indexed — offset your input indices by +1. `i & (-i)` isolates the lowest set bit (the key operation). `update`: add `i & (-i)` to move forward. `query`: subtract `i & (-i)` to move to parent. BIT only supports operations with an INVERSE (sum, XOR) — NOT max/min (no inverse). For max queries, use a Segment Tree instead.",
+    "problems": [
+      "LC 307. Range Sum Query - Mutable",
+      "LC 315. Count of Smaller Numbers After Self",
+      "LC 493. Reverse Pairs"
+    ],
+    "category": "Advanced DS",
+    "difficulty": "Hard"
+  },
+  "LRU Cache": {
+    "trigger": "Design a fixed-capacity key-value cache with O(1) get and put, Least Recently Used eviction",
+    "complexity": "Time: O(1) get and put | Space: O(capacity)",
+    "code": "class LRUCache {\n    int cap;\n    // Doubly linked list: front = most recently used, back = least recently used\n    list<pair<int,int>> cache; // {key, value}\n    unordered_map<int, list<pair<int,int>>::iterator> mp; // key -> iterator\npublic:\n    LRUCache(int capacity) : cap(capacity) {}\n\n    int get(int key) {\n        if (!mp.count(key)) return -1;\n        // Move accessed node to front (mark as most recently used)\n        cache.splice(cache.begin(), cache, mp[key]);\n        return mp[key]->second;\n    }\n\n    void put(int key, int value) {\n        if (mp.count(key)) {\n            mp[key]->second = value;\n            cache.splice(cache.begin(), cache, mp[key]); // Move to front\n        } else {\n            if ((int)cache.size() == cap) { // Evict LRU (back of list)\n                mp.erase(cache.back().first);\n                cache.pop_back();\n            }\n            cache.push_front({key, value});\n            mp[key] = cache.begin();\n        }\n    }\n};",
+    "gotchas": "Use a DOUBLY linked list (not singly) so you can remove any node in O(1). `std::list::splice()` moves a node to a new position in O(1) without memory allocation. The hashmap stores list ITERATORS (not values) for O(1) access. When evicting, erase from the hashmap BEFORE popping from the list to avoid dangling iterator access.",
+    "problems": [
+      "LC 146. LRU Cache",
+      "LC 460. LFU Cache"
+    ],
+    "category": "Design",
+    "difficulty": "Medium"
   }
 }
