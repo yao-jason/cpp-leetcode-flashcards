@@ -109,7 +109,7 @@
     "code": "// --- Approach 1: STL nth_element (Highly recommended) ---\n// Find the Kth LARGEST element (k is 1-indexed)\nint k = 2;\nstd::nth_element(nums.begin(), nums.begin() + k - 1, nums.end(), greater<int>());\nreturn nums[k - 1];\n\n// --- Approach 2: Iterative Quick Select (3-Way Dutch National Flag) ---\nint left = 0, right = nums.size() - 1, targetIdx = k - 1;\nwhile (left <= right) {\n    if (left == right) return nums[left];\n    int pivotVal = nums[left + rand() % (right - left + 1)]; // Random pivot!\n    int hi = left, lo = right;\n    for (int i = left; i <= lo;) {\n        if      (nums[i] > pivotVal) swap(nums[hi++], nums[i++]); // > pv: front\n        else if (nums[i] < pivotVal) swap(nums[i], nums[lo--]);   // < pv: back\n        else                         i++;                          // == pv: skip\n    }\n    // [left, hi-1] > pv | [hi, lo] == pv | [lo+1, right] < pv (for Kth largest)\n    if      (targetIdx < hi) right = hi - 1;\n    else if (targetIdx > lo) left  = lo + 1;\n    else                     return pivotVal;\n}",
     "gotchas": "ALWAYS use a RANDOM pivot to prevent O(N²) worst case on sorted/adversarial inputs. Use Quick Select for static arrays; use a heap for streaming data. The 3-way partition handles arrays with many duplicates efficiently and avoids TLE.",
     "problems": [
-      "LC 215. Kth Largest Element in an Array",
+      "LC 462. Minimum Moves to Equal Array Elements II",
       "LC 973. K Closest Points to Origin",
       "LC 347. Top K Frequent Elements"
     ],
@@ -117,14 +117,14 @@
     "difficulty": "Hard"
   },
   "Monotonic Stack (NGE)": {
-    "trigger": "Next greater or smaller element at each index, Maximum area enclosed within a bounded histogram, Volume of water trapped between elevation walls",
+    "trigger": "Next greater or smaller element at each index, Maximum area enclosed within a bounded histogram, Extend histogram area problem to 2D grids (Maximal Rectangle)",
     "complexity": "Time: O(N) | Space: O(N)",
     "code": "// Store INDICES in the stack (not values) to compute distances\nstack<int> st; // Decreasing stack: top is smallest -> finds Next Greater\n\nfor (int i = 0; i < n; i++) {\n    // Pop while current element is greater than stack top\n    // (adjust condition for increasing stack / next smaller element)\n    while (!st.empty() && nums[st.top()] < nums[i]) {\n        int prev_idx = st.top();\n        st.pop();\n        // Process: nums[i] is the Next Greater Element for nums[prev_idx]\n        // Distance to next greater: i - prev_idx\n        result[prev_idx] = i - prev_idx;\n    }\n    st.push(i);\n}\n// Remaining elements in stack have no next greater element",
     "gotchas": "Store INDICES (not values) — you almost always need to compute distances. Decide stack type: Decreasing stack (top=smallest) → 'Next Greater Element'; Increasing stack (top=largest) → 'Next Smaller Element'. After the loop, elements still in the stack have no next greater/smaller element.",
     "problems": [
       "LC 739. Daily Temperatures",
       "LC 84. Largest Rectangle in Histogram",
-      "LC 42. Trapping Rain Water"
+      "LC 85. Maximal Rectangle"
     ],
     "category": "Stack",
     "difficulty": "Medium"
@@ -149,7 +149,7 @@
     "gotchas": "C++ max-heap is default; for min-heap use `greater<>` as the third template argument. In a custom comparator struct, `return a > b` means 'a has lower priority' (min-heap behavior). For Top K Largest: use a MIN-heap of size K and pop when oversized — the top is the Kth largest. Don't confuse with 'Top K Smallest' (use max-heap).",
     "problems": [
       "LC 215. Kth Largest Element in an Array",
-      "LC 347. Top K Frequent Elements",
+      "LC 23. Merge K Sorted Lists",
       "LC 295. Find Median from Data Stream"
     ],
     "category": "Heap",
@@ -227,7 +227,7 @@
     "gotchas": "Mark nodes as visited WHEN ENQUEUING (not when dequeuing). Dequeuing-based marking allows duplicate entries in the queue, causing TLE or wrong shortest path counts. BFS on unweighted graphs ALWAYS gives the optimal (shortest) path — use Dijkstra only for weighted graphs.",
     "problems": [
       "LC 127. Word Ladder",
-      "LC 994. Rotting Oranges",
+      "LC 863. All Nodes Distance K in Binary Tree",
       "LC 1091. Shortest Path in Binary Matrix"
     ],
     "category": "Graph",
@@ -305,8 +305,8 @@
     "gotchas": "For interval scheduling, sort by END time (not start time). Sorting by start time is incorrect and a common mistake. Always ask yourself: 'Can a counterexample disprove this greedy?' Greedy is NOT always applicable — if in doubt, try DP first.",
     "problems": [
       "LC 435. Non-overlapping Intervals",
-      "LC 55. Jump Game",
-      "LC 45. Jump Game II"
+      "LC 45. Jump Game II",
+      "LC 134. Gas Station"
     ],
     "category": "Greedy",
     "difficulty": "Medium"
