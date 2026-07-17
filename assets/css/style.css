@@ -257,8 +257,8 @@ body {
 }
 
 /* Orange label signals warning — no background fill needed */
-.footer-label.gotcha  { color: #d29922; }
-.footer-label.practice { color: #6e7681; }
+.footer-label.gotcha   { color: #d29922; }
+.footer-label.practice { color: #3fb950; }
 
 .footer-gotcha-text {
   color: #6e7681;

@@ -179,7 +179,7 @@ fetch('data.json')
         }).join('');
         footerParts.push(`
           <div class="footer-row">
-            <span class="footer-label practice">▶ Practice</span>
+            <span class="footer-label practice">🏋️ Practice</span>
             <div class="problem-links">${links}</div>
           </div>`);
       }
