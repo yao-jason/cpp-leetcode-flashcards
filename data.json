@@ -93,7 +93,7 @@
   "Sweep Line (Intervals)": {
     "trigger": "Count maximum concurrent overlapping intervals, Merge adjacent or overlapping ranges, Track active events across a continuous timeline",
     "complexity": "Time: O(N log N) | Space: O(N)",
-    "code": "// std::map automatically sorts keys (times) in ascending order\nmap<int, int> events;\nfor (const vector<int>& interval : intervals) {\n    // If [1, 2] and [2, 3] should NOT overlap: use interval[1] + 1\n    events[interval[0]]++;   // +1 at start: one more event begins\n    events[interval[1]]--;   // -1 at end:   one event ends\n}\n\nint current_active = 0, max_active = 0;\nfor (const auto& [time, delta] : events) {\n    current_active += delta;\n    max_active = max(max_active, current_active);\n}",
+    "code": "// std::map automatically sorts keys (times) in ascending order\nmap<int, int> events;\nfor (const vector<int>& interval : intervals) {\n    // If [1, 2] and [2, 3] SHOULD overlap (closed intervals): use interval[1] + 1\n    events[interval[0]]++;   // +1 at start: one more event begins\n    events[interval[1]]--;   // -1 at end:   one event ends\n}\n\nint current_active = 0, max_active = 0;\nfor (const auto& [time, delta] : events) {\n    current_active += delta;\n    max_active = max(max_active, current_active);\n}",
     "gotchas": "Be careful about boundary inclusiveness: if [1,2] and [2,3] overlap (closed intervals), decrement at `interval[1]+1`. If open intervals don't overlap, decrement at `interval[1]`. Use `map<int,int>` (sorted by key), NOT `unordered_map`.",
     "problems": [
       "LC 253. Meeting Rooms II",
