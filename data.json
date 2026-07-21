@@ -116,10 +116,10 @@
     "category": "Array",
     "difficulty": "Hard"
   },
-  "Monotonic Stack (NGE)": {
+  "Monotonic Stack (NGE / Histogram)": {
     "trigger": "Next greater or smaller element at each index, Maximum area enclosed within a bounded histogram, Extend histogram area problem to 2D grids (Maximal Rectangle)",
     "complexity": "Time: O(N) | Space: O(N)",
-    "code": "// Store INDICES in the stack (not values) to compute distances\nstack<int> st; // Decreasing stack: top is smallest -> finds Next Greater\n\nfor (int i = 0; i < n; i++) {\n    // Pop while current element is greater than stack top\n    // (adjust condition for increasing stack / next smaller element)\n    while (!st.empty() && nums[st.top()] < nums[i]) {\n        int prev_idx = st.top();\n        st.pop();\n        // Process: nums[i] is the Next Greater Element for nums[prev_idx]\n        // Distance to next greater: i - prev_idx\n        result[prev_idx] = i - prev_idx;\n    }\n    st.push(i);\n}\n// Remaining elements in stack have no next greater element",
+    "code": "// --- NGE: Next Greater Element ---\nstack<int> st; // Decreasing (top=smallest) -> finds Next Greater; flip < to > for Next Smaller\nfor (int i = 0; i < n; i++) {\n    while (!st.empty() && nums[st.top()] < nums[i]) {\n        int idx = st.top(); st.pop();\n        result[idx] = i - idx; // nums[i] is NGE; distance = i - idx\n    }\n    st.push(i);\n} // Elements remaining in stack -> no next greater element\n\n// --- LC 84: Largest Rectangle in Histogram ---\nvector<int> h(heights.begin(), heights.end());\nh.insert(h.begin(), 0); h.push_back(0); // sentinel 0s flush all bars at end\nstack<int> st2; int maxArea = 0;\nfor (int i = 0; i < (int)h.size(); i++) {\n    while (!st2.empty() && h[st2.top()] > h[i]) {\n        int ht = h[st2.top()]; st2.pop();\n        maxArea = max(maxArea, ht * (i - st2.top() - 1)); // width = i - new_top - 1\n    }\n    st2.push(i);\n}",
     "gotchas": "Store INDICES (not values) — you almost always need to compute distances. Decide stack type: Decreasing stack (top=smallest) → 'Next Greater Element'; Increasing stack (top=largest) → 'Next Smaller Element'. After the loop, elements still in the stack have no next greater/smaller element.",
     "problems": [
       "LC 739. Daily Temperatures",
