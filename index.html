@@ -11,11 +11,36 @@
   <link rel="stylesheet" href="assets/css/style.css"/>
 </head>
 <body>
+  <!-- Sidebar toggle overlay (click to close on mobile) -->
+  <div id="sidebar-overlay"></div>
+
   <aside id="sidebar">
     <div class="sidebar-header">
-      C++ LeetCode Flashcards
-      <span>Interview Preparation</span>
+      <div class="sidebar-title-row">
+        <div class="sidebar-title-text">
+          C++ LeetCode Flashcards
+          <span>Interview Preparation</span>
+        </div>
+        <button id="sidebar-toggle" aria-label="Toggle sidebar" title="Toggle sidebar">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
     </div>
+
+    <!-- Overall progress bar -->
+    <div id="overall-progress">
+      <div class="progress-bar-track">
+        <div class="progress-bar-fill" id="progress-bar-fill"></div>
+      </div>
+      <div class="progress-text">
+        <span id="progress-count">0</span> / <span id="progress-total">0</span> read
+        <span class="progress-actions">
+          <button id="continue-btn" class="progress-btn" title="Jump to next unread card">▶ Continue</button>
+          <button id="mark-all-btn" class="progress-btn" title="Mark all cards as read / unread">Mark All Read</button>
+        </span>
+      </div>
+    </div>
+
     <div class="search-container">
       <input type="text" id="pattern-search" placeholder="🔍 Search patterns..." autocomplete="off" spellcheck="false"/>
     </div>
