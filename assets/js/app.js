@@ -71,6 +71,46 @@ fetch('data.json')
     // Click overlay to close sidebar (mobile / small screens)
     overlay.addEventListener('click', () => setSidebarCollapsed(true));
 
+    // ── Universal action bar (always visible at bottom) ──────────────────────
+    const floatingNav = document.createElement('div');
+    floatingNav.id = 'floating-nav';
+    floatingNav.setAttribute('aria-label', 'Card navigation');
+    floatingNav.innerHTML = `
+      <button id="floating-prev" class="floating-nav-btn" aria-label="Previous card" title="Previous card [\u2190]">&#8592;</button>
+      <button id="floating-mark-read" class="floating-mark-btn" aria-pressed="false" title="Toggle read status [Space]">&#9675; Mark as Read</button>
+      <button id="floating-next" class="floating-nav-btn" aria-label="Next card" title="Next card [\u2192]">&#8594;</button>
+    `;
+    document.body.appendChild(floatingNav);
+
+    floatingNav.querySelector('#floating-prev').addEventListener('click', () => navigateCard(-1));
+    floatingNav.querySelector('#floating-next').addEventListener('click', () => navigateCard(1));
+    floatingNav.querySelector('#floating-mark-read').addEventListener('click', () => {
+      if (!currentTopic) return;
+      const nowRead = !readSet.has(currentTopic);
+      setRead(currentTopic, nowRead);
+      syncFloatingMarkRead(nowRead);
+    });
+
+    function syncFloatingMarkRead(isRead) {
+      const btn = floatingNav.querySelector('#floating-mark-read');
+      if (!btn) return;
+      btn.classList.toggle('read', isRead);
+      btn.setAttribute('aria-pressed', String(isRead));
+      btn.innerHTML = isRead ? '&#10003; Read' : '&#9675; Mark as Read';
+    }
+
+    // Sync disabled state of prev/next and mark-read text in floating bar
+    function updateFloatingNav() {
+      if (!currentTopic) return;
+      const topics = allButtons.map(b => b.topic);
+      const idx = topics.indexOf(currentTopic);
+      const prevBtn = floatingNav.querySelector('#floating-prev');
+      const nextBtn = floatingNav.querySelector('#floating-next');
+      if (prevBtn) prevBtn.disabled = idx <= 0;
+      if (nextBtn) nextBtn.disabled = idx >= topics.length - 1;
+      syncFloatingMarkRead(readSet.has(currentTopic));
+    }
+
     // ── 1. Group patterns by category ────────────────────────────────────────
     const categoryMap = {};
     Object.keys(data).forEach(topic => {
@@ -273,14 +313,8 @@ fetch('data.json')
         if (dot) dot.style.display = isNowRead ? 'inline' : 'none';
       });
 
-      // Refresh the active flashcard's Mark as Read button (if visible)
-      const markReadBtn = document.getElementById('mark-read-btn');
-      if (markReadBtn && currentTopic) {
-        const nowRead = readSet.has(currentTopic);
-        markReadBtn.classList.toggle('read', nowRead);
-        markReadBtn.setAttribute('aria-pressed', String(nowRead));
-        markReadBtn.textContent = nowRead ? '✅ Read' : '○ Mark as Read';
-      }
+      // Refresh the active flashcard's floating mark-read button (if visible)
+      if (currentTopic) syncFloatingMarkRead(readSet.has(currentTopic));
 
       updateProgress();
     });
@@ -408,9 +442,6 @@ fetch('data.json')
       card.innerHTML = `
         <div class="card-header">
           <h1>${title} ${difficultyBadge(topicData.difficulty)}</h1>
-          <button class="btn-read ${alreadyRead ? 'read' : ''}" id="mark-read-btn" aria-pressed="${alreadyRead}" title="Toggle read status [Space]">
-            ${alreadyRead ? '✅ Read' : '○ Mark as Read'}
-          </button>
         </div>
         <div class="meta-panel">
           <div class="meta-row">
@@ -429,20 +460,13 @@ fetch('data.json')
       // 2. Inject C++ code via textContent to prevent HTML tag interpretation
       card.querySelector('code').textContent = topicData.code;
 
-      // 3. Wire up Mark as Reviewed button
-      const markReadBtn = card.querySelector('#mark-read-btn');
-      markReadBtn.addEventListener('click', () => {
-        const nowRead = !readSet.has(title);
-        setRead(title, nowRead);
-        markReadBtn.classList.toggle('read', nowRead);
-        markReadBtn.setAttribute('aria-pressed', String(nowRead));
-        markReadBtn.textContent = nowRead ? '✅ Read' : '○ Mark as Read';
-      });
-
       grid.appendChild(card);
 
-      // 4. Trigger Highlight.js for syntax highlighting
+      // 3. Trigger Highlight.js for syntax highlighting
       hljs.highlightElement(card.querySelector('code'));
+
+      // 4. Sync floating action bar state
+      updateFloatingNav();
     }
 
     // ── 8. Load first pattern by default ────────────────────────────────────
@@ -453,6 +477,7 @@ fetch('data.json')
       btn.classList.add('active');
       activeBtn = btn;
       renderFlashcard(topic, data[topic]);
+      updateFloatingNav();
     }
 
     // ── 9. Keyboard shortcuts ─────────────────────────────────────────────────
@@ -482,6 +507,7 @@ fetch('data.json')
 
       currentTopic = topic;
       renderFlashcard(topic, data[topic]);
+      updateFloatingNav();
     }
 
     document.addEventListener('keydown', e => {
@@ -496,7 +522,7 @@ fetch('data.json')
         case 'Spacebar': {
           // Space → Toggle Mark as Read for current card
           e.preventDefault();
-          const markReadBtn = document.getElementById('mark-read-btn');
+          const markReadBtn = document.getElementById('floating-mark-read');
           if (markReadBtn) markReadBtn.click();
           break;
         }

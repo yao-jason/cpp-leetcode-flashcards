@@ -357,6 +357,7 @@ body.sidebar-collapsed #sidebar-toggle {
 /* ── Main Content ───────────────────────────────────────────────────────── */
 #main-content {
   padding: 1.5rem;
+  padding-bottom: 6rem; /* clear the floating action bar */
   overflow-y: auto;
   /* When sidebar is collapsed, take up full width smoothly */
   transition: padding 0.3s ease;
@@ -436,6 +437,7 @@ body.sidebar-collapsed #main-content {
 }
 
 .btn-read:active { transform: scale(0.97); }
+
 
 /* ── Difficulty Badges ──────────────────────────────────────────────────── */
 .difficulty-badge {
@@ -570,6 +572,99 @@ pre {
   overflow-x: auto;
 }
 
+/* ── Universal floating action bar (always visible at bottom) ───────────── */
+#floating-nav {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: stretch;       /* all children share the same height */
+  gap: 6px;
+  background: rgba(22, 27, 34, 0.94);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid #30363d;
+  border-radius: 40px;
+  padding: 6px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.55);
+  z-index: 150;
+  /* Keep above iOS Home Indicator */
+  margin-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* ── Arrow buttons (square-ish, fixed width) ──────────────────────────── */
+.floating-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  border-radius: 34px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #c9d1d9;
+  font-size: 1.25rem;
+  cursor: pointer;
+  transition: background 0.18s, border-color 0.18s, transform 0.12s;
+  line-height: 1;
+  -webkit-tap-highlight-color: transparent;
+  padding: 0;
+}
+
+.floating-nav-btn:hover:not(:disabled) {
+  background: #21262d;
+  border-color: #30363d;
+}
+
+.floating-nav-btn:active:not(:disabled) {
+  transform: scale(0.88);
+  background: rgba(59,130,246,0.18);
+  border-color: rgba(59,130,246,0.4);
+}
+
+.floating-nav-btn:disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+}
+
+/* ── Mark as Read button (stretches to fill middle) ────────────────────── */
+.floating-mark-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 20px;
+  border-radius: 30px;
+  border: 1px solid #30363d;
+  background: #21262d;
+  color: #8b949e;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s, border-color 0.2s, color 0.2s, transform 0.1s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.floating-mark-btn:hover {
+  background: #2d333b;
+  border-color: #484f58;
+  color: #c9d1d9;
+}
+
+.floating-mark-btn.read {
+  background: rgba(63, 185, 80, 0.12);
+  border-color: rgba(63, 185, 80, 0.35);
+  color: #3fb950;
+}
+
+.floating-mark-btn.read:hover {
+  background: rgba(63, 185, 80, 0.2);
+  border-color: rgba(63, 185, 80, 0.5);
+}
+
+.floating-mark-btn:active { transform: scale(0.97); }
+
 /* ── Sidebar Overlay (tablet/mobile: tap outside to close) ──────────────── */
 #sidebar-overlay {
   display: none;
@@ -624,7 +719,7 @@ pre {
   }
 
   #main-content {
-    padding: 4rem 1rem 1rem;  /* top padding clears the floating toggle */
+    padding: 4rem 1rem 6rem;  /* top clears toggle; bottom clears floating action bar */
     pointer-events: auto;
   }
 
