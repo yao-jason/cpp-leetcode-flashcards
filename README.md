@@ -13,9 +13,23 @@ Each flashcard is a self-contained pattern card covering:
 ## ✨ Features
 - **13 categories** — Array, Stack, Heap, Linked List, Tree, Backtracking, Graph, Greedy, DP, Math, String, Advanced DS, Design
 - **Difficulty badges** — Easy / Medium / Hard on every card
-- **Collapsible sidebar groups** — expand/collapse by category
+- **Collapsible sidebar groups** — expand/collapse by category, with per-category read progress indicator
 - **Real-time search** — filter patterns by name instantly
 - **One-click practice** — problem links open LeetCode in a new tab
+- **Progress tracking** — mark cards as read; overall progress bar and per-category counters persist across sessions via `localStorage`
+- **Continue button** — jumps directly to the next unread card
+- **Keyboard shortcuts** — navigate and mark cards without touching the mouse (see below)
+- **Responsive layout** — collapsible sidebar with overlay on mobile
+
+## ⌨️ Keyboard Shortcuts
+| Key | Action |
+|-----|--------|
+| `Space` | Toggle **Mark as Read / Unread** for the current card |
+| `C` | **Continue** — jump to the next unread card |
+| `←` | Go to the **previous** card (sidebar order) |
+| `→` | Go to the **next** card (sidebar order) |
+
+> Shortcuts are disabled when the search box is focused.
 
 ## 🛠️ Tech Stack
 - **Frontend**: Vanilla JS, CSS Grid
@@ -28,6 +42,8 @@ Each flashcard is a self-contained pattern card covering:
 3. Study the **Complexity** and **C++ template**.
 4. Check the **Gotchas** below the code for common mistakes.
 5. Click a **Practice** link to solve a representative problem on LeetCode.
+6. Press **`Space`** (or click **Mark as Read**) to record the card as reviewed.
+7. Press **`C`** (or click **Continue**) to jump to the next unread card and keep the momentum going.
 
 ## 📐 Code Template Style Guide
 

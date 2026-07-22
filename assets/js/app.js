@@ -408,7 +408,7 @@ fetch('data.json')
       card.innerHTML = `
         <div class="card-header">
           <h1>${title} ${difficultyBadge(topicData.difficulty)}</h1>
-          <button class="btn-read ${alreadyRead ? 'read' : ''}" id="mark-read-btn" aria-pressed="${alreadyRead}">
+          <button class="btn-read ${alreadyRead ? 'read' : ''}" id="mark-read-btn" aria-pressed="${alreadyRead}" title="Toggle read status [Space]">
             ${alreadyRead ? '✅ Read' : '○ Mark as Read'}
           </button>
         </div>
@@ -454,4 +454,71 @@ fetch('data.json')
       activeBtn = btn;
       renderFlashcard(topic, data[topic]);
     }
+
+    // ── 9. Keyboard shortcuts ─────────────────────────────────────────────────
+
+    /** Navigate to the previous (-1) or next (+1) card in sidebar order */
+    function navigateCard(dir) {
+      if (!currentTopic) return;
+      const topics  = allButtons.map(b => b.topic);
+      const idx     = topics.indexOf(currentTopic);
+      if (idx === -1) return;
+      const nextIdx = idx + dir;
+      if (nextIdx < 0 || nextIdx >= topics.length) return;
+
+      const { btn, topic } = allButtons[nextIdx];
+      if (activeBtn) activeBtn.classList.remove('active');
+      btn.classList.add('active');
+      activeBtn = btn;
+
+      btn.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+      // Expand collapsed category if needed
+      const groupEl = btn.closest('.category-group');
+      if (groupEl && groupEl.classList.contains('collapsed')) {
+        groupEl.classList.remove('collapsed');
+        groupEl.querySelector('.cat-toggle').textContent = '▾';
+      }
+
+      currentTopic = topic;
+      renderFlashcard(topic, data[topic]);
+    }
+
+    document.addEventListener('keydown', e => {
+      // Ignore shortcuts when focus is inside any text input
+      const tag = document.activeElement.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+      // Ignore when modifier keys are held (except Shift)
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+
+      switch (e.key) {
+        case ' ':
+        case 'Spacebar': {
+          // Space → Toggle Mark as Read for current card
+          e.preventDefault();
+          const markReadBtn = document.getElementById('mark-read-btn');
+          if (markReadBtn) markReadBtn.click();
+          break;
+        }
+        case 'c':
+        case 'C': {
+          // C → Continue (jump to next unread card)
+          e.preventDefault();
+          continueBtn.click();
+          break;
+        }
+        case 'ArrowLeft': {
+          // ← → previous card
+          e.preventDefault();
+          navigateCard(-1);
+          break;
+        }
+        case 'ArrowRight': {
+          // → → next card
+          e.preventDefault();
+          navigateCard(1);
+          break;
+        }
+      }
+    });
   });
