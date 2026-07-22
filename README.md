@@ -55,4 +55,5 @@ All templates follow a **wide-screen, single-viewport** authoring rule — the g
 - **Inline comments**: Explanatory notes go at the **end of the relevant line** (`code; // why`), never on a standalone line above. When multiple lines in a block have inline comments, align the `//` vertically (e.g., at a multiple of 4 columns) for better readability.
 - **Horizontal density**: Prefer one longer line over two short ones. Combine related operations on the same line where clarity allows (e.g., `int l = 0, r = n - 1;`).
 - **Section dividers**: Use `// --- Section Name ---` on the line that starts each template variant. One blank line between major sections; none within a section.
+- **Variable naming**: Be context-aware and prioritize clarity. Avoid abbreviations if they make the code harder to read. For instance, in Tree problems, use full names like `preorderStart` and `inorderEnd` for array boundaries instead of `preL`/`inR` to prevent confusion with `left`/`right` child nodes.
 - **Goal**: Every template should be fully visible in a typical widescreen browser viewport without the user reaching for the scroll wheel.
