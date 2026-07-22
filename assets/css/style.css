@@ -676,7 +676,7 @@ pre {
 
 /* ── Responsive: Tablet & Mobile ────────────────────────────────────────── */
 @media (max-width: 768px) {
-  body {
+  body, body.sidebar-collapsed {
     grid-template-columns: 1fr;
   }
 
@@ -686,14 +686,13 @@ pre {
     left: 0;
     height: 100vh;
     z-index: 100;
-    transform: translateX(0);
-    transition: transform 0.3s ease, width 0.3s ease;
+    transition: left 0.3s ease, width 0.3s ease;
     box-shadow: 4px 0 20px rgba(0,0,0,0.5);
   }
 
   body.sidebar-collapsed #sidebar {
     width: 280px;       /* keep full width but slide off screen */
-    transform: translateX(-100%);
+    left: -280px;
     overflow: hidden;
   }
 
