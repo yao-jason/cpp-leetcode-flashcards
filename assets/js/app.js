@@ -76,9 +76,9 @@ fetch('data.json')
     floatingNav.id = 'floating-nav';
     floatingNav.setAttribute('aria-label', 'Card navigation');
     floatingNav.innerHTML = `
-      <button id="floating-prev" class="floating-nav-btn" aria-label="Previous card" title="Previous card [\u2190]">&#8592;</button>
+      <button id="floating-prev" class="floating-nav-btn" aria-label="Previous card" title="Previous card [↑]">&#8593;</button>
       <button id="floating-mark-read" class="floating-mark-btn" aria-pressed="false" title="Toggle read status [Space]">&#9675; Mark as Read</button>
-      <button id="floating-next" class="floating-nav-btn" aria-label="Next card" title="Next card [\u2192]">&#8594;</button>
+      <button id="floating-next" class="floating-nav-btn" aria-label="Next card" title="Next card [↓]">&#8595;</button>
     `;
     document.body.appendChild(floatingNav);
 
@@ -533,14 +533,14 @@ fetch('data.json')
           continueBtn.click();
           break;
         }
-        case 'ArrowLeft': {
-          // ← → previous card
+        case 'ArrowUp': {
+          // ↑ → previous card
           e.preventDefault();
           navigateCard(-1);
           break;
         }
-        case 'ArrowRight': {
-          // → → next card
+        case 'ArrowDown': {
+          // ↓ → next card
           e.preventDefault();
           navigateCard(1);
           break;
