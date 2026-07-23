@@ -326,13 +326,13 @@
   },
   "Knapsack DP (0/1 vs Unbounded)": {
     "trigger": "Select items to hit an exact target sum, Maximize value under a capacity constraint, Partition a set into equal halves, Coin combinations with or without item reuse",
-    "complexity": "Time: O(N * W) | Space: O(W)",
-    "code": "// --- 0/1 Knapsack (each item AT MOST ONCE): iterate weight BACKWARDS to prevent reuse ---\nvector<int> dp(W + 1, 0);\nfor (auto& [weight, value] : items)\n    for (int w = W; w >= weight; w--)       // <-- BACKWARDS\n        dp[w] = max(dp[w], dp[w - weight] + value);\n\n// --- Unbounded Knapsack (UNLIMITED reuse): iterate weight FORWARDS to allow reuse ---\nvector<int> dp(W + 1, 0);\nfor (auto& [weight, value] : items)\n    for (int w = weight; w <= W; w++)       // <-- FORWARDS\n        dp[w] = max(dp[w], dp[w - weight] + value);\n\n// --- Partition Equal Subset Sum (0/1 Knapsack on bool dp) ---\nint total = reduce(nums.begin(), nums.end(), 0);\nif (total % 2 != 0) return false; // Odd sum: impossible\nint target = total / 2;\nvector<bool> dp(target + 1, false);\ndp[0] = true;\nfor (int num : nums)\n    for (int w = target; w >= num; w--)     // <-- BACKWARDS (0/1)\n        dp[w] = dp[w] || dp[w - num];\nreturn dp[target];",
+    "complexity": "Time: O(N * capacity) | Space: O(capacity)",
+    "code": "// --- 0/1 Knapsack (each item AT MOST ONCE): iterate weight BACKWARDS to prevent reuse ---\nvector<int> dp(capacity + 1, 0);\nfor (auto& [weight, value] : items)\n    for (int currCapacity = capacity; currCapacity >= weight; currCapacity--) // <-- BACKWARDS\n        dp[currCapacity] = max(dp[currCapacity], dp[currCapacity - weight] + value);\n\n// --- Unbounded Knapsack (UNLIMITED reuse): iterate weight FORWARDS to allow reuse ---\nvector<int> dp(capacity + 1, 0);\nfor (auto& [weight, value] : items)\n    for (int currCapacity = weight; currCapacity <= capacity; currCapacity++) // <-- FORWARDS\n        dp[currCapacity] = max(dp[currCapacity], dp[currCapacity - weight] + value);\n\n// --- Partition Equal Subset Sum (0/1 Knapsack on bool dp) ---\nint total = reduce(nums.begin(), nums.end(), 0); // sum of nums\nif (total % 2 != 0) return false; // Odd sum: impossible\nint target = total / 2;\nvector<bool> dp(target + 1, false);\ndp[0] = true;\nfor (int num : nums)\n    for (int currCapacity = target; currCapacity >= num; currCapacity--)      // <-- BACKWARDS (0/1)\n        dp[currCapacity] = dp[currCapacity] || dp[currCapacity - num];\nreturn dp[target];",
     "gotchas": "The CRITICAL rule: 0/1 Knapsack → iterate weight BACKWARDS (prevent reuse). Unbounded Knapsack → iterate weight FORWARDS (allow reuse). Getting this backwards is the #1 mistake. For partition problems: if total sum is odd, return false immediately. Initialize `dp[0] = true` (can always form sum 0).",
     "problems": [
-      "LC 416. Partition Equal Subset Sum",
-      "LC 518. Coin Change II",
-      "LC 322. Coin Change"
+      "LC 494. Target Sum",
+      "LC 322. Coin Change",
+      "LC 416. Partition Equal Subset Sum"
     ],
     "category": "DP",
     "difficulty": "Medium"
